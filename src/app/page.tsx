@@ -245,7 +245,7 @@ function AppContent() {
       };
 
       const zippedBytes = zipSync(zipData);
-      const blob = new Blob([zippedBytes], { type: 'application/zip' });
+      const blob = new Blob([zippedBytes.buffer], { type: 'application/zip' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
