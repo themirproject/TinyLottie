@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { zipSync, strToU8 } from 'fflate';
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
 import { LottieDropZone } from "@/components/LottieDropZone";
 import { LottiePreview } from "@/components/LottiePreview";
 import { OptimizationPanel } from "@/components/OptimizationPanel";
@@ -42,6 +44,7 @@ interface LottieData {
 }
 
 function AppContent() {
+  const { user, isPro, loginWithGoogle } = useAuth();
   const [lottieData, setLottieData] =
     useState<LottieData | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -102,8 +105,8 @@ function AppContent() {
   };
 
   const handleFileSelect = async (file: File) => {
-    // Check file size limit
-    if (file.size > FILE_SIZE_LIMIT) {
+    // Check file size limit and enforce PRO bounds
+    if (file.size > FILE_SIZE_LIMIT && !isPro) {
       setLargeFileSize(file.size);
       setShowPricingModal(true);
       toast.error(
@@ -350,11 +353,28 @@ function AppContent() {
                 href="https://www.shopier.com/themirproject"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] hover:from-[#00C9A7] hover:to-[#00DDB3] text-white rounded-lg font-medium transition-all transform hover:scale-105"
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] hover:from-[#00C9A7] hover:to-[#00DDB3] text-white rounded-lg font-medium transition-all transform hover:scale-105"
               >
                 <Heart className="w-4 h-4" />
                 Support Us
               </a>
+              {user ? (
+                <Link
+                  href="/profile"
+                  className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-medium transition-all"
+                >
+                  <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} alt="Avatar" className="w-6 h-6 rounded-full" />
+                  <span className="hidden sm:inline">Profile</span>
+                  {isPro && <span className="text-[10px] font-bold bg-[#00DDB3] text-white px-1.5 py-0.5 rounded ml-1">PRO</span>}
+                </Link>
+              ) : (
+                <button
+                  onClick={loginWithGoogle}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium transition-all"
+                >
+                  Login
+                </button>
+              )}
               <ThemeToggle />
             </motion.div>
           </div>

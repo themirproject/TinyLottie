@@ -20,8 +20,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
   };
 
   const handleUpgrade = () => {
-    // TODO: Integrate with payment provider (Stripe, Gumroad, etc.)
-    window.open('https://buy.stripe.com/your-payment-link', '_blank');
+    window.open('https://www.shopier.com/themirproject/46280901', '_blank');
   };
 
   return (

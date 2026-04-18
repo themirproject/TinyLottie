@@ -23,6 +23,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from "@/contexts/AuthContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -63,7 +65,9 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
       <GoogleAnalytics gaId="G-4CF9E7S9RK" />
       <Analytics />
