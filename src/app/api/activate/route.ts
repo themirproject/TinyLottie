@@ -77,10 +77,10 @@ export async function POST(req: NextRequest) {
 
     console.log(`[activate] UID ${uid} successfully upgraded to PRO with code ${normalizedCode}`);
     return NextResponse.json({ success: true, message: "PRO activated successfully." });
-  } catch (err) {
+  } catch (err: any) {
     console.error("[activate] Unexpected error:", err);
     return NextResponse.json(
-      { error: "An unexpected error occurred. Please try again." },
+      { error: `An unexpected error occurred: ${err.message || String(err)}` },
       { status: 500 }
     );
   }
