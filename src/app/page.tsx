@@ -789,6 +789,21 @@ function AppContent() {
               All processing happens locally in your browser.
               Your files never leave your device.
             </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-3 sm:mb-4">
+              <a
+                href="mailto:emir.kalayci@gmail.com"
+                className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 hover:text-[#00DDB3] transition-colors"
+              >
+                Support
+              </a>
+              <span className="text-gray-300 dark:text-gray-700">·</span>
+              <Link
+                href="/privacy"
+                className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 hover:text-[#00DDB3] transition-colors"
+              >
+                Privacy Policy
+              </Link>
+            </div>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-500">
               © 2026 TinyLottie. Built with ❤️ for the
               animation community.
