@@ -34,8 +34,11 @@ export default function ProfilePage() {
 
       const res = await fetch("/api/activate", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: couponCode.trim(), idToken }),
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ code: couponCode.trim() }),
       });
 
       const data = await res.json();
