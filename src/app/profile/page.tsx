@@ -174,12 +174,12 @@ export default function ProfilePage() {
                        <button
                         onClick={handleActivate}
                         disabled={isActivating || !couponCode.trim()}
-                        className="shrink-0 w-full sm:w-auto min-w-[140px] px-4 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-colors disabled:opacity-50 text-sm whitespace-nowrap flex items-center justify-center"
+                        className="shrink-0 w-full sm:w-[160px] px-4 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-all disabled:opacity-50 text-sm flex items-center justify-center overflow-hidden"
                       >
                         {isActivating ? (
                           <div className="flex items-center gap-2">
-                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                             <span>Activating...</span>
+                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
+                             <span className="whitespace-nowrap">Verifying...</span>
                           </div>
                         ) : "Activate Pro"}
                       </button>
