@@ -1,18 +1,105 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "motion/react";
-import { Key, LogOut, ShieldCheck, User } from "lucide-react";
+import { Key, LogOut, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
+function LogoutScreen({ countdown, setCountdown, router }: { countdown: number; setCountdown: (n: number) => void; router: any }) {
+  useEffect(() => {
+    if (countdown <= 0) {
+      router.push("/");
+      return;
+    }
+    const t = setTimeout(() => setCountdown(countdown - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown, router, setCountdown]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center text-center max-w-sm"
+      >
+        {/* SVG Illustration */}
+        <div className="mb-8">
+          <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Background circle */}
+            <circle cx="60" cy="60" r="56" fill="#00DDB3" fillOpacity="0.08" />
+            {/* Door frame */}
+            <rect x="34" y="28" width="38" height="66" rx="4" stroke="#CBD5E1" strokeWidth="2.5" fill="white" className="dark:fill-gray-900" />
+            {/* Door panel lines */}
+            <rect x="40" y="35" width="26" height="22" rx="2" fill="#F1F5F9" stroke="#E2E8F0" strokeWidth="1.5" />
+            <rect x="40" y="64" width="26" height="22" rx="2" fill="#F1F5F9" stroke="#E2E8F0" strokeWidth="1.5" />
+            {/* Doorknob */}
+            <circle cx="64" cy="62" r="3" fill="#CBD5E1" />
+            {/* Person waving outside the door */}
+            {/* Head */}
+            <circle cx="88" cy="44" r="8" fill="#00DDB3" fillOpacity="0.2" stroke="#00DDB3" strokeWidth="2" />
+            <circle cx="86" cy="43" r="1.5" fill="#00DDB3" />
+            <circle cx="90" cy="43" r="1.5" fill="#00DDB3" />
+            <path d="M85 47 Q88 50 91 47" stroke="#00DDB3" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+            {/* Body */}
+            <path d="M88 52 L88 70" stroke="#00DDB3" strokeWidth="2.5" strokeLinecap="round" />
+            {/* Waving arm */}
+            <motion.path
+              d="M88 56 Q96 48 100 44"
+              stroke="#00DDB3"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              fill="none"
+              animate={{ rotate: [0, 15, -10, 15, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              style={{ originX: "88px", originY: "56px" }}
+            />
+            {/* Other arm */}
+            <path d="M88 56 L82 63" stroke="#00DDB3" strokeWidth="2.5" strokeLinecap="round" />
+            {/* Legs */}
+            <path d="M88 70 L84 82" stroke="#00DDB3" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M88 70 L92 82" stroke="#00DDB3" strokeWidth="2.5" strokeLinecap="round" />
+            {/* Floor line */}
+            <line x1="26" y1="94" x2="94" y2="94" stroke="#E2E8F0" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">See you soon! 👋</h1>
+        <p className="text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
+          You've been logged out. Redirecting you to the home page in{" "}
+          <span className="font-bold text-[#00DDB3]">{countdown}</span>
+          {" "}second{countdown !== 1 ? "s" : ""}...
+        </p>
+
+        {/* Progress bar */}
+        <div className="w-48 h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden mb-6">
+          <motion.div
+            className="h-full bg-[#00DDB3] rounded-full"
+            initial={{ width: "100%" }}
+            animate={{ width: "0%" }}
+            transition={{ duration: 3, ease: "linear" }}
+          />
+        </div>
+
+        <Link href="/" className="text-sm text-gray-400 hover:text-[#00DDB3] transition-colors font-medium">
+          Go now →
+        </Link>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
+  const router = useRouter();
   const { user, isPro, loading, logout, refreshProStatus } = useAuth();
   const [couponCode, setCouponCode] = useState("");
   const [isActivating, setIsActivating] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   const handleActivate = async () => {
     // --- Boş kod kontrolü ---
@@ -75,14 +162,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center p-4">
-        <User className="w-16 h-16 text-gray-400 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Login Required</h1>
-        <p className="text-gray-500 mb-6 text-center max-w-sm">Please log in to view your profile and manage your PRO status.</p>
-        <Link href="/" className="px-6 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-medium transition-colors">
-          Return Home
-        </Link>
-      </div>
+      <LogoutScreen countdown={countdown} setCountdown={setCountdown} router={router} />
     );
   }
 
