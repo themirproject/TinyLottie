@@ -153,7 +153,7 @@ export default function ProfilePage() {
                     
                     <div className="flex flex-col gap-3 mt-auto">
                       {/* Price display — identical height to the input on the right */}
-                      <div className="w-full h-11 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 flex items-center justify-between">
+                      <div className="w-full h-11 px-4 flex items-center justify-between">
                          <span className="font-bold text-gray-900 dark:text-white text-sm">$39</span>
                          <span className="text-xs font-medium text-gray-500">Lifetime Access</span>
                       </div>
