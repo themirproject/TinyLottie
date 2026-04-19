@@ -12,12 +12,24 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
       },
       {
-        userAgent: 'PerplexityBot',
+        userAgent: 'GPTBot',
         allow: '/',
       },
       {
-        userAgent: 'GPTBot',
-        disallow: '/',
+        userAgent: 'ChatGPT-User',
+        allow: '/',
+      },
+      {
+        userAgent: 'ClaudeBot',
+        allow: '/',
+      },
+      {
+        userAgent: 'Anthropic-ai',
+        allow: '/',
+      },
+      {
+        userAgent: 'Google-Extended',
+        allow: '/',
       },
     ],
     sitemap: 'https://tinylottie.com/sitemap.xml',

@@ -59,20 +59,21 @@ function AppContent() {
 
   const FILE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB in bytes
 
-  // Set favicon and title
+  // Set dynamic favicon
   useEffect(() => {
-    document.title =
-      "TinyLottie - Optimize Your Lottie Animations";
 
-    // Create SVG favicon with FileJson icon
+    // Create SVG favicon with FileJson icon using a 40x40 viewBox 
+    // to simulate p-2 (8px padding) and rounded-lg (8px border radius)
     const svg = `
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <rect width="24" height="24" rx="4" fill="#00DDB3"/>
-        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" stroke="white" fill="none"/>
-        <polyline points="14 2 14 8 20 8" stroke="white" fill="none"/>
-        <line x1="16" y1="13" x2="8" y2="13" stroke="white"/>
-        <line x1="16" y1="17" x2="8" y2="17" stroke="white"/>
-        <polyline points="10 9 9 9 8 9" stroke="white"/>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
+        <rect width="40" height="40" rx="8" fill="#00DDB3" />
+        <g transform="translate(8, 8)" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+          <polyline points="10 9 9 9 8 9" />
+        </g>
       </svg>
     `;
 
