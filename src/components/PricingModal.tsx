@@ -52,11 +52,14 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
         <div className="p-6">
           <div className="mb-6">
             <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">$9</span>
-              <span className="text-gray-600 dark:text-gray-400">/month</span>
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">$19</span>
+              <span className="text-gray-600 dark:text-gray-400 font-medium">/ lifetime</span>
+              <span className="ml-2 text-xs font-bold text-[#00DDB3] bg-[#00DDB3]/10 px-2 py-1 rounded-full border border-[#00DDB3]/20">
+                ONE-TIME PAYMENT
+              </span>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              Unlock unlimited file sizes and support the development of TinyLottie.
+              Get lifetime access to unlimited file sizes and support the development of TinyLottie.
             </p>
           </div>
 

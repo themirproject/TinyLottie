@@ -77,8 +77,8 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col items-center justify-center p-4">
         <User className="w-16 h-16 text-gray-400 mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1>
-        <p className="text-gray-500 mb-6 text-center max-w-sm">Please return to the dashboard and login with Google to access your profile.</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Login Required</h1>
+        <p className="text-gray-500 mb-6 text-center max-w-sm">Please log in to view your profile and manage your PRO status.</p>
         <Link href="/" className="px-6 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-medium transition-colors">
           Return Home
         </Link>
@@ -137,8 +137,8 @@ export default function ProfilePage() {
             
             {isPro ? (
                <div className="p-6 bg-gradient-to-br from-[#00DDB3]/20 to-[#00C9A7]/20 rounded-2xl border border-[#00DDB3]/30">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">You are officially a PRO! 🎉</h3>
-                  <p className="text-gray-600 dark:text-gray-300">Your account is fully unlocked. You can now optimize massive JSON and dotLottie files without any bounds.</p>
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">You have Lifetime PRO! 🎉</h3>
+                  <p className="text-gray-600 dark:text-gray-300">Your account is fully unlocked forever. You can now optimize massive JSON and dotLottie files without any bounds.</p>
                </div>
             ) : (
               <>
@@ -174,9 +174,14 @@ export default function ProfilePage() {
                        <button
                         onClick={handleActivate}
                         disabled={isActivating || !couponCode.trim()}
-                        className="shrink-0 min-w-[124px] px-4 py-2 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-medium transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
+                        className="shrink-0 w-full sm:w-auto min-w-[140px] px-4 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-colors disabled:opacity-50 text-sm whitespace-nowrap flex items-center justify-center"
                       >
-                        {isActivating ? "Validating..." : "Activate"}
+                        {isActivating ? (
+                          <div className="flex items-center gap-2">
+                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                             <span>Activating...</span>
+                          </div>
+                        ) : "Activate Pro"}
                       </button>
                     </div>
                   </div>
