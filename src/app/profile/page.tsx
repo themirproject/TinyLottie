@@ -152,16 +152,16 @@ export default function ProfilePage() {
                     </div>
                     
                     <div className="flex flex-col gap-3 mt-auto">
-                      {/* Fake input block for perfect visual symmetry with the right side */}
-                      <div className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 flex items-center justify-between">
-                         <span className="font-bold text-gray-900 dark:text-white">$39</span>
+                      {/* Price display — identical height to the input on the right */}
+                      <div className="w-full h-11 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 flex items-center justify-between">
+                         <span className="font-bold text-gray-900 dark:text-white text-sm">$39</span>
                          <span className="text-xs font-medium text-gray-500">Lifetime Access</span>
                       </div>
                       <a
                         href="https://www.shopier.com/themirproject/46280901"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block text-center w-full px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold transition-transform hover:scale-[1.02]"
+                        className="flex items-center justify-center h-11 w-full px-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold transition-transform hover:scale-[1.02]"
                       >
                         Upgrade to Pro
                       </a>
@@ -182,12 +182,12 @@ export default function ProfilePage() {
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
                         placeholder="PRO-XXXX"
-                        className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-[#00DDB3]/50 dark:text-white text-sm"
+                        className="w-full h-11 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 outline-none focus:ring-2 focus:ring-[#00DDB3]/50 dark:text-white text-sm"
                       />
                        <button
                         onClick={handleActivate}
                         disabled={isActivating || !couponCode.trim()}
-                        className="w-full px-4 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-all disabled:opacity-50 text-sm flex items-center justify-center"
+                        className="flex items-center justify-center h-11 w-full px-4 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg text-sm font-bold transition-all disabled:opacity-50"
                       >
                         {isActivating ? (
                           <div className="flex items-center gap-2">
