@@ -9,9 +9,10 @@ function getAdminApp(): App {
     return getApps()[0];
   }
 
-  const projectId   = process.env.FIREBASE_ADMIN_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  const rawKey      = process.env.FIREBASE_ADMIN_PRIVATE_KEY;
+  // Vercel UI or .env files might accidentally inject literal quotes
+  const projectId   = process.env.FIREBASE_ADMIN_PROJECT_ID?.replace(/^"|"$/g, "")?.trim();
+  const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.replace(/^"|"$/g, "")?.trim();
+  const rawKey      = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/^"|"$/g, "");
 
   if (!projectId || !clientEmail || !rawKey) {
     console.error(

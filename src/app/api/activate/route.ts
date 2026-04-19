@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
     try {
       const decoded = await adminAuth().verifyIdToken(idToken);
       uid = decoded.uid;
-    } catch (tokenErr) {
+    } catch (tokenErr: any) {
       // Log the real reason so Vercel logs show the actual error
       console.error("[activate] verifyIdToken failed:", tokenErr);
       return NextResponse.json(
-        { error: "Invalid or expired session. Please log in again." },
+        { error: `Invalid or expired session. Please log in again. Details: ${tokenErr.message}` },
         { status: 401 }
       );
     }
