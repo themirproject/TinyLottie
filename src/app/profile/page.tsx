@@ -163,7 +163,7 @@ export default function ProfilePage() {
                        <Key className="w-4 h-4 text-[#00DDB3]" /> Enter Coupon Code
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Paste the PRO-XXXX code you received after checkout.</p>
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                       <input
                         type="text"
                         value={couponCode}
