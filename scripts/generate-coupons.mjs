@@ -1,42 +1,46 @@
 #!/usr/bin/env node
 /**
  * TinyLottie Coupon Generator
- * Usage: node scripts/generate-coupons.mjs <count>
- * Example: node scripts/generate-coupons.mjs 10
  *
- * Requires env vars: FIREBASE_ADMIN_PROJECT_ID, FIREBASE_ADMIN_CLIENT_EMAIL, FIREBASE_ADMIN_PRIVATE_KEY
- * Or place a .env.local file in the project root.
+ * Usage:
+ *   node scripts/generate-coupons.mjs <count> <path-to-service-account.json>
+ *
+ * Example:
+ *   node scripts/generate-coupons.mjs 10 ~/Downloads/serviceAccount.json
  */
 
 import { initializeApp, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { randomBytes } from "crypto";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import { getFirestore }         from "firebase-admin/firestore";
+import { randomBytes }          from "crypto";
+import { readFileSync }         from "fs";
+import { resolve }              from "path";
 
-// Load .env.local if present
+// --- Parse arguments ---
+const count       = parseInt(process.argv[2] ?? "10", 10);
+const serviceAccountPath = process.argv[3];
+
+if (!serviceAccountPath) {
+  console.error(
+    "\n❌  Kullanım: node scripts/generate-coupons.mjs <adet> <serviceAccount.json-yolu>\n" +
+    "   Örnek:    node scripts/generate-coupons.mjs 10 ~/Downloads/serviceAccount.json\n"
+  );
+  process.exit(1);
+}
+
+// --- Load service account JSON ---
+let serviceAccount;
 try {
-  const env = readFileSync(resolve(process.cwd(), ".env.local"), "utf8");
-  for (const line of env.split("\n")) {
-    const [key, ...rest] = line.split("=");
-    if (key && rest.length) process.env[key.trim()] = rest.join("=").trim();
-  }
-} catch { /* no .env.local, that's fine */ }
+  serviceAccount = JSON.parse(readFileSync(resolve(process.cwd(), serviceAccountPath), "utf8"));
+} catch (e) {
+  console.error(`\n❌  Dosya okunamadı: ${serviceAccountPath}\n`, e.message, "\n");
+  process.exit(1);
+}
 
-const count = parseInt(process.argv[2] ?? "10", 10);
-
-const app = initializeApp({
-  credential: cert({
-    projectId:   process.env.FIREBASE_ADMIN_PROJECT_ID,
-    clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
-    privateKey:  (process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? "").replace(/\\n/g, "\n"),
-  }),
-});
-
-const db = getFirestore(app);
+// --- Initialize Firebase Admin ---
+initializeApp({ credential: cert(serviceAccount) });
+const db = getFirestore();
 
 function generateCode() {
-  // PRO-XXXXXXXX  (8 hex chars → 32-bit entropy)
   return "PRO-" + randomBytes(4).toString("hex").toUpperCase();
 }
 
@@ -47,8 +51,7 @@ function generateCode() {
   for (let i = 0; i < count; i++) {
     const code = generateCode();
     codes.push(code);
-    const ref = db.collection("coupons").doc();
-    batch.set(ref, {
+    batch.set(db.collection("coupons").doc(), {
       code,
       used: false,
       createdAt: new Date().toISOString(),
@@ -57,8 +60,8 @@ function generateCode() {
 
   await batch.commit();
 
-  console.log(`\n✅ ${count} coupon(s) written to Firestore:\n`);
-  codes.forEach(c => console.log(" ", c));
-  console.log("\nSend these codes to customers after purchase via email.\n");
+  console.log(`\n✅  ${count} adet kupon Firestore'a yazıldı:\n`);
+  codes.forEach(c => console.log("   ", c));
+  console.log("\n📧  Bu kodları ödeme sonrası müşteriye e-posta ile ilet.\n");
   process.exit(0);
 })();
