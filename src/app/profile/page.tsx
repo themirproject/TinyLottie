@@ -15,7 +15,12 @@ export default function ProfilePage() {
   const [isActivating, setIsActivating] = useState(false);
 
   const handleActivate = async () => {
-    if (!couponCode.trim() || !user) return;
+    // --- Boş kod kontrolü ---
+    if (!couponCode.trim()) {
+      alert("Geçersiz kod! Lütfen bir kod girin.");
+      return;
+    }
+    if (!user) return;
 
     setIsActivating(true);
     try {
@@ -35,7 +40,12 @@ export default function ProfilePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        toast.error(data.error || "Activation failed.");
+        // 404 = invalid / already redeemed → native alert
+        if (res.status === 404) {
+          alert("Geçersiz kod! Kod bulunamadı veya daha önce kullanılmış.");
+        } else {
+          toast.error(data.error || "Activation failed.");
+        }
         return;
       }
 
