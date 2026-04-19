@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 tinylottie-afbda-firebase-adminsdk-fbsvc-2f013f0465.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!jsconfig.json

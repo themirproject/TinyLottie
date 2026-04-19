@@ -5,7 +5,7 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth"; // EKLENDİ
 import { getFirestore } from "firebase/firestore"; // EKLENDİ
 
 const firebaseConfig = {
-  apiKey: "removed-api-key",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "tinylottie-afbda.firebaseapp.com",
   projectId: "tinylottie-afbda",
   storageBucket: "tinylottie-afbda.firebasestorage.app",
