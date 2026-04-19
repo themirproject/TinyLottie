@@ -142,28 +142,41 @@ export default function ProfilePage() {
                </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                       Buy a License Code
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Purchase a lifetime PRO code to remove all limits forever.</p>
-                    <a
-                      href="https://www.shopier.com/themirproject/46280901"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-center w-full px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold transition-transform hover:scale-[1.02]"
-                    >
-                      Upgrade to Pro
-                    </a>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+                  <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col h-full">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                        Buy a License Code
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Purchase a lifetime PRO code to remove all limits forever.</p>
+                    </div>
+                    
+                    <div className="flex flex-col gap-3 mt-auto">
+                      {/* Fake input block for perfect visual symmetry with the right side */}
+                      <div className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 flex items-center justify-between">
+                         <span className="font-bold text-gray-900 dark:text-white">$39</span>
+                         <span className="text-xs font-medium text-gray-500">Lifetime Access</span>
+                      </div>
+                      <a
+                        href="https://www.shopier.com/themirproject/46280901"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-center w-full px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg font-semibold transition-transform hover:scale-[1.02]"
+                      >
+                        Upgrade to Pro
+                      </a>
+                    </div>
                   </div>
 
-                  <div className="p-6 bg-[#00DDB3]/5 rounded-2xl border border-[#00DDB3]/20">
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                       <Key className="w-4 h-4 text-[#00DDB3]" /> Enter Coupon Code
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Paste the PRO-XXXX code you received after checkout.</p>
-                    <div className="flex flex-col gap-3">
+                  <div className="p-6 bg-[#00DDB3]/5 rounded-2xl border border-[#00DDB3]/20 flex flex-col h-full">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                         <Key className="w-4 h-4 text-[#00DDB3]" /> Enter Coupon Code
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Paste the PRO-XXXX code you received after checkout.</p>
+                    </div>
+                    
+                    <div className="flex flex-col gap-3 mt-auto">
                       <input
                         type="text"
                         value={couponCode}
