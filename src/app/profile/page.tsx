@@ -17,7 +17,7 @@ export default function ProfilePage() {
   const handleActivate = async () => {
     // --- Boş kod kontrolü ---
     if (!couponCode.trim()) {
-      alert("Geçersiz kod! Lütfen bir kod girin.");
+      toast.error("Geçersiz kod! Lütfen bir kod girin.");
       return;
     }
     if (!user) return;
@@ -46,7 +46,7 @@ export default function ProfilePage() {
       if (!res.ok) {
         // 404 = invalid / already redeemed → native alert
         if (res.status === 404) {
-          alert("Geçersiz kod! Kod bulunamadı veya daha önce kullanılmış.");
+          toast.error("Geçersiz kod! Kod bulunamadı veya daha önce kullanılmış.");
         } else {
           toast.error(data.error || "Activation failed.");
         }
@@ -163,23 +163,23 @@ export default function ProfilePage() {
                        <Key className="w-4 h-4 text-[#00DDB3]" /> Enter Coupon Code
                     </h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">Paste the PRO-XXXX code you received after checkout.</p>
-                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <div className="flex flex-col gap-3">
                       <input
                         type="text"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
                         placeholder="PRO-XXXX"
-                        className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#00DDB3]/50 dark:text-white text-sm"
+                        className="w-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-[#00DDB3]/50 dark:text-white text-sm"
                       />
                        <button
                         onClick={handleActivate}
                         disabled={isActivating || !couponCode.trim()}
-                        className="shrink-0 w-full sm:w-[160px] px-4 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-all disabled:opacity-50 text-sm flex items-center justify-center overflow-hidden"
+                        className="w-full px-4 py-2.5 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-all disabled:opacity-50 text-sm flex items-center justify-center"
                       >
                         {isActivating ? (
                           <div className="flex items-center gap-2">
                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                             <span className="whitespace-nowrap">Verifying...</span>
+                             <span>Verifying...</span>
                           </div>
                         ) : "Activate Pro"}
                       </button>
