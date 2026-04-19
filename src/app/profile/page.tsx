@@ -174,7 +174,7 @@ export default function ProfilePage() {
                        <button
                         onClick={handleActivate}
                         disabled={isActivating || !couponCode.trim()}
-                        className="shrink-0 min-w-[96px] px-4 py-2 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-medium transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
+                        className="shrink-0 min-w-[124px] px-4 py-2 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-medium transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
                       >
                         {isActivating ? "Validating..." : "Activate"}
                       </button>

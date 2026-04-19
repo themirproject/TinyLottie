@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Analytics } from "@vercel/analytics/next";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -59,9 +60,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  icons: {
-    icon: "/icon.png",
-  },
 };
 
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -78,7 +76,6 @@ export default function RootLayout({
         "@type": "Organization",
         "name": "TinyLottie",
         "url": "https://tinylottie.com",
-        "logo": "https://tinylottie.com/icon.png"
       },
       {
         "@type": "SoftwareApplication",
@@ -107,6 +104,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <AuthProvider>
+          <Toaster />
           {children}
         </AuthProvider>
       </body>
