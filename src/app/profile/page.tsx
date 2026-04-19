@@ -82,7 +82,7 @@ function LogoutScreen({ countdown, setCountdown, router }: { countdown: number; 
             className="h-full bg-[#00DDB3] rounded-full"
             initial={{ width: "100%" }}
             animate={{ width: "0%" }}
-            transition={{ duration: 3, ease: "linear" }}
+            transition={{ duration: 5, ease: "linear" }}
           />
         </div>
 
@@ -99,12 +99,11 @@ export default function ProfilePage() {
   const { user, isPro, loading, logout, refreshProStatus } = useAuth();
   const [couponCode, setCouponCode] = useState("");
   const [isActivating, setIsActivating] = useState(false);
-  const [countdown, setCountdown] = useState(3);
+  const [countdown, setCountdown] = useState(5);
 
   const handleActivate = async () => {
-    // --- Boş kod kontrolü ---
     if (!couponCode.trim()) {
-      toast.error("Geçersiz kod! Lütfen bir kod girin.");
+      toast.error("Please enter a coupon code.");
       return;
     }
     if (!user) return;
@@ -133,7 +132,7 @@ export default function ProfilePage() {
       if (!res.ok) {
         // 404 = invalid / already redeemed → native alert
         if (res.status === 404) {
-          toast.error("Geçersiz kod! Kod bulunamadı veya daha önce kullanılmış.");
+          toast.error("Invalid or already redeemed coupon code.");
         } else {
           toast.error(data.error || "Activation failed.");
         }
