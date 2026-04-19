@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setIsPro(false);
       }
+      // Auth state is fully resolved — safe to render protected pages now
       setLoading(false);
     });
 
@@ -69,13 +70,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const loginWithGoogle = async () => {
+    // Keep loading=true so the profile page shows spinner, not "Access Denied"
+    setLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       if (result.user) {
+        // Force-refresh token so getIdToken() works immediately after login
+        await result.user.getIdToken(true);
         await refreshProStatus();
+        setUser(result.user);
       }
     } catch (error) {
       console.error("Google login failed", error);
+    } finally {
+      // onAuthStateChanged may or may not fire again; always settle loading
+      setLoading(false);
     }
   };
 

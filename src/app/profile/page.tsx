@@ -25,7 +25,8 @@ export default function ProfilePage() {
     setIsActivating(true);
     try {
       // Get the user's current ID token to send to the server for secure verification
-      const idToken = await auth.currentUser?.getIdToken();
+      // Force-refresh ensures we get a valid token even right after login
+      const idToken = await auth.currentUser?.getIdToken(true);
       if (!idToken) {
         toast.error("Session expired. Please log in again.");
         return;
