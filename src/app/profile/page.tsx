@@ -171,10 +171,10 @@ export default function ProfilePage() {
                         placeholder="PRO-XXXX"
                         className="flex-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#00DDB3]/50 dark:text-white text-sm"
                       />
-                      <button
+                       <button
                         onClick={handleActivate}
                         disabled={isActivating || !couponCode.trim()}
-                        className="px-4 py-2 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+                        className="shrink-0 min-w-[96px] px-4 py-2 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-medium transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
                       >
                         {isActivating ? "Validating..." : "Activate"}
                       </button>
