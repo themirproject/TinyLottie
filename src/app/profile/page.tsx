@@ -5,8 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "motion/react";
 import { Key, LogOut, ShieldCheck, User } from "lucide-react";
 import { toast } from "sonner";
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -17,42 +16,35 @@ export default function ProfilePage() {
 
   const handleActivate = async () => {
     if (!couponCode.trim() || !user) return;
-    
+
     setIsActivating(true);
     try {
-      // Setup coupon query targeting valid and unused PRO codes
-      const couponsRef = collection(db, "coupons");
-      const q = query(couponsRef, where("code", "==", couponCode.toUpperCase()), where("used", "==", false));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        toast.error("Invalid or already redeemed coupon code.");
-        setIsActivating(false);
+      // Get the user's current ID token to send to the server for secure verification
+      const idToken = await auth.currentUser?.getIdToken();
+      if (!idToken) {
+        toast.error("Session expired. Please log in again.");
         return;
       }
 
-      const couponDoc = querySnapshot.docs[0];
-      
-      // Update coupon to used status
-      await updateDoc(doc(db, "coupons", couponDoc.id), {
-        used: true,
-        redeemedBy: user.uid,
-        redeemedAt: new Date().toISOString()
+      const res = await fetch("/api/activate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode.trim(), idToken }),
       });
 
-      // Update user to PRO status natively
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        isPro: true
-      });
+      const data = await res.json();
 
-      // Purge state
+      if (!res.ok) {
+        toast.error(data.error || "Activation failed.");
+        return;
+      }
+
+      // Refresh context so isPro badge and file-size gate update immediately
       await refreshProStatus();
-      toast.success("TinyLottie PRO successfully activated!");
+      toast.success("🎉 TinyLottie PRO successfully activated!");
       setCouponCode("");
-
-    } catch (error) {
-      console.error(error);
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to activate code. Please try again later.");
     } finally {
       setIsActivating(false);

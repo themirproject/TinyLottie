@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["sharp"],
+  serverExternalPackages: ["sharp", "firebase-admin"],
   typescript: {
     // !! WARN !!
     // Dangerously allow production builds to successfully complete even if
