@@ -184,36 +184,64 @@ function AppContent() {
     return result;
   };
 
+  // Browser-based image to WebP converter
+  const convertImageToWebpClient = (dataUrl: string): Promise<{ dataUrl: string; width: number; height: number }> => {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas ctx not found'));
+        ctx.drawImage(img, 0, 0);
+        // Optimize to WebP with 0.8 quality
+        const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
+        resolve({ dataUrl: webpDataUrl, width: img.width, height: img.height });
+      };
+      img.onerror = () => reject(new Error('Image load failed'));
+      img.src = dataUrl;
+    });
+  };
+
   const handleOptimize = async () => {
     if (!lottieData) return;
 
     setIsOptimizing(true);
     setOptimizationError(false); // Reset error state
     try {
-      // 1. Client side cleanup
+      // 1. Client side JSON cleanup
       const cleanedData = optimizeLottie(lottieData.data);
 
-      // 2. Server side compression via API Route
-      const response = await fetch('/api/optimize', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ data: cleanedData }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to optimize Lottie file via API');
+      // 2. Pure Client-Side Image Compression (zero uploads!)
+      // This specifically avoids Vercel's 4.5MB Serverless Payload limit
+      const assets = cleanedData.assets || [];
+      const supportedFormats = ['png', 'jpeg', 'jpg', 'gif'];
+      
+      for (const asset of assets) {
+        if (!asset.p) continue;
+        if (typeof asset.p === 'string' && asset.p.startsWith('data:image')) {
+          const match = asset.p.match(/^data:image\/(png|jpeg|jpg|gif);base64,/);
+          if (match && supportedFormats.includes(match[1])) {
+            try {
+              const { dataUrl, width, height } = await convertImageToWebpClient(asset.p);
+              asset.p = dataUrl;
+              // Preserve structural metadata in the asset if it doesn't magically exist
+              if (!asset.w) asset.w = width;
+              if (!asset.h) asset.h = height;
+            } catch (err) {
+              console.warn("Failed to convert image to webp in browser:", err);
+            }
+          }
+        }
       }
-
-      const { optimizedData } = await response.json();
 
       setLottieData({
         ...lottieData,
-        optimizedData,
+        optimizedData: cleanedData,
       });
 
-      toast.success("Lottie optimized successfully!");
+      toast.success("Lottie optimized successfully offline!");
     } catch (error) {
       console.error(error);
       setOptimizationError(true);
