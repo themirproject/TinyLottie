@@ -217,7 +217,7 @@ function AppContent() {
       // This specifically avoids Vercel's 4.5MB Serverless Payload limit
       const assets = cleanedData.assets || [];
       const supportedFormats = ['png', 'jpeg', 'jpg', 'gif'];
-      
+
       for (const asset of assets) {
         if (!asset.p) continue;
         if (typeof asset.p === 'string' && asset.p.startsWith('data:image')) {
@@ -612,11 +612,10 @@ function AppContent() {
                     <Button
                       onClick={handleOptimize}
                       disabled={isOptimizing}
-                      className={`w-full h-11 sm:h-12 text-sm sm:text-base font-semibold ${
-                        lottieData.optimizedData
+                      className={`w-full h-11 sm:h-12 text-sm sm:text-base font-semibold ${lottieData.optimizedData
                           ? "bg-transparent border-2 border-[#00DDB3] text-[#00DDB3] hover:bg-[#00DDB3]/10"
                           : "bg-[#00DDB3] hover:bg-[#00C9A7] text-white"
-                      }`}
+                        }`}
                     >
                       {isOptimizing ? (
                         <>
@@ -726,11 +725,11 @@ function AppContent() {
                             Saved{" "}
                             {formatFileSize(
                               lottieData.file.size -
-                                new Blob([
-                                  JSON.stringify(
-                                    lottieData.optimizedData,
-                                  ),
-                                ]).size,
+                              new Blob([
+                                JSON.stringify(
+                                  lottieData.optimizedData,
+                                ),
+                              ]).size,
                             )}
                           </p>
                           <p className="font-bold text-[#00DDB3] text-[12px] sm:text-[14px]">
@@ -742,7 +741,7 @@ function AppContent() {
                                   ),
                                 ]).size) /
                                 lottieData.file.size) *
-                                100,
+                              100,
                             )}
                             % smaller
                           </p>
