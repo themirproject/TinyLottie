@@ -43,9 +43,9 @@ export default function LeaderboardPage() {
           };
         });
 
-        // Filter valid ratios and sort descending by compression ratio
+        // Filter valid ratios (>= 50%) and sort descending by compression ratio
         const sortedData = data
-          .filter(item => typeof item.compressionRatio === 'number')
+          .filter(item => typeof item.compressionRatio === 'number' && item.compressionRatio >= 50)
           .sort((a, b) => b.compressionRatio - a.compressionRatio);
           
         // Limit to top 50 to keep it clean
