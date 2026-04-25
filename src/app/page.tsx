@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { zipSync, strToU8 } from 'fflate';
 import Link from "next/link";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { LottieDropZone } from "@/components/LottieDropZone";
 import { LottiePreview } from "@/components/LottiePreview";
@@ -240,6 +242,26 @@ function AppContent() {
         ...lottieData,
         optimizedData: cleanedData,
       });
+
+      // Log optimization to database if user is logged in
+      if (user) {
+        try {
+          const originalBytes = lottieData.file.size;
+          const optimizedBytes = new Blob([JSON.stringify(cleanedData)]).size;
+          const ratio = Math.round(((originalBytes - optimizedBytes) / originalBytes) * 100);
+
+          await addDoc(collection(db, "usage_logs"), {
+            userId: user.uid,
+            fileName: lottieData.file.name,
+            originalSize: formatFileSize(originalBytes),
+            optimizedSize: formatFileSize(optimizedBytes),
+            compressionRatio: ratio,
+            timestamp: serverTimestamp()
+          });
+        } catch (logError) {
+          console.error("Failed to log usage:", logError);
+        }
+      }
 
       toast.success("Lottie optimized successfully offline!");
     } catch (error) {
