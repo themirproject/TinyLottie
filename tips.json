@@ -1,0 +1,7 @@
+[
+  { "id": 1, "text": "Reduce the number of strokes in your Lottie file to significantly decrease file size." },
+  { "id": 2, "text": "Simplifying complex vector paths can boost your animation's web performance by up to 30%." },
+  { "id": 3, "text": "Remove invisible layers; Lottie files often carry hidden data that adds unnecessary weight." },
+  { "id": 4, "text": "Try locking your frame rate (FPS) to 30 to optimize your animation for smoother playback." },
+  { "id": 5, "text": "Did you know TinyLottie Pro can automatically compress complex layers with a single click?" }
+]
