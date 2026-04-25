@@ -61,9 +61,9 @@ export default function LeaderboardPage() {
   }, []);
 
   const anonymizeUserId = (userId: string) => {
-    if (!userId || userId === "anonim") return "kullanıcı_anonim";
+    if (!userId || userId === "anonim") return "user_anonymous";
     const lastChars = userId.length > 4 ? userId.slice(-4) : userId;
-    return `kullanıcı_***${lastChars}`;
+    return `user_***${lastChars}`;
   };
 
   return (
@@ -72,15 +72,15 @@ export default function LeaderboardPage() {
         <div className="mb-8 sm:mb-12">
           <Link href="/" className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Ana Sayfaya Dön
+            Back to Home
           </Link>
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="p-3 sm:p-4 bg-yellow-100 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 rounded-2xl sm:rounded-3xl">
               <Trophy className="w-8 h-8 sm:w-10 sm:h-10" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">Günün Tasarruf Şampiyonları</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 sm:mt-2">Son 24 saatte en yüksek verimlilik oranına ulaşan dosyalar.</p>
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">Optimization Champions</h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 sm:mt-2">Files with the highest efficiency ratio in the last 24 hours.</p>
             </div>
           </div>
         </div>
@@ -94,8 +94,8 @@ export default function LeaderboardPage() {
             {entries.length === 0 ? (
               <div className="p-12 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
                 <FileJson className="w-12 h-12 mb-4 opacity-20" />
-                <p>Son 24 saatte henüz optimizasyon yapılmadı.</p>
-                <p className="text-sm mt-1 font-medium text-[#00DDB3]">İlk şampiyon sen olabilirsin!</p>
+                <p>No optimizations performed in the last 24 hours.</p>
+                <p className="text-sm mt-1 font-medium text-[#00DDB3]">You could be the first champion!</p>
               </div>
             ) : (
               <div className="divide-y divide-gray-100 dark:divide-gray-800/50">

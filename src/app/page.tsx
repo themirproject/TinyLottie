@@ -412,7 +412,7 @@ function AppContent() {
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
               >
                 <Trophy className="w-4 h-4 text-yellow-500" />
-                <span className="hidden md:inline">Şampiyonlar</span>
+                <span className="hidden md:inline">Champions</span>
               </Link>
               <a
                 href="https://www.shopier.com/themirproject"
@@ -792,32 +792,6 @@ function AppContent() {
                         <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                         Download Optimized File
                       </Button>
-
-                      {/* Developer Tip Card */}
-                      {currentTip && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="mt-4 bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-xl p-4 sm:p-5"
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className="p-1.5 bg-yellow-100 dark:bg-yellow-500/20 rounded-lg text-yellow-600 dark:text-yellow-400">
-                              <Lightbulb className="w-4 h-4 sm:w-5 sm:h-5" />
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-semibold text-yellow-800 dark:text-yellow-400 mb-1">
-                                💡 Developer Tip
-                              </h4>
-                              <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-200/80 mb-3 leading-relaxed">
-                                {currentTip}
-                              </p>
-                              <button className="text-xs font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors">
-                                Learn More →
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
                     </motion.div>
                   ) : (
                     <div className="mt-auto">
@@ -830,6 +804,32 @@ function AppContent() {
                   )}
                 </motion.div>
               </div>
+
+              {/* Developer Tip Card - Independent */}
+              {currentTip && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-2xl p-4 sm:p-6"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-500/20 rounded-xl text-yellow-600 dark:text-yellow-400">
+                      <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-base sm:text-lg font-semibold text-yellow-800 dark:text-yellow-400 mb-1.5">
+                        💡 Developer Tip
+                      </h4>
+                      <p className="text-sm sm:text-base text-yellow-700 dark:text-yellow-200/80 mb-3 leading-relaxed">
+                        {currentTip}
+                      </p>
+                      <button className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors">
+                        Learn More →
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </div>
         )}
