@@ -412,7 +412,7 @@ function AppContent() {
                 className="hidden sm:flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
               >
                 <Trophy className="w-4 h-4 text-yellow-500" />
-                <span className="hidden md:inline">Champions</span>
+                <span className="hidden md:inline">Leaderboard</span>
               </Link>
               <a
                 href="https://www.shopier.com/themirproject"
@@ -823,7 +823,10 @@ function AppContent() {
                       <p className="text-sm sm:text-base text-yellow-700 dark:text-yellow-200/80 mb-3 leading-relaxed">
                         {currentTip}
                       </p>
-                      <button className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors">
+                      <button 
+                        onClick={() => setShowPricingModal(true)}
+                        className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors"
+                      >
                         Learn More →
                       </button>
                     </div>
