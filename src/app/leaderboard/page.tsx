@@ -66,6 +66,12 @@ export default function LeaderboardPage() {
     return `user_***${lastChars}`;
   };
 
+  const anonymizeFileName = (fileName: string) => {
+    if (!fileName) return "hidden_file.json";
+    const ext = fileName.includes('.') ? fileName.split('.').pop() : "json";
+    return `hidden_file_***.${ext}`;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
@@ -123,7 +129,7 @@ export default function LeaderboardPage() {
                         </div>
                         <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5 truncate">
                           <FileJson className="w-3.5 h-3.5 flex-shrink-0 text-gray-400" />
-                          <span className="truncate">{entry.fileName}</span>
+                          <span className="truncate">{anonymizeFileName(entry.fileName)}</span>
                         </div>
                       </div>
                     </div>
