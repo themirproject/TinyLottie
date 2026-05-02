@@ -43,8 +43,20 @@ export default function LeaderboardPage() {
           };
         });
 
+        const dummyData: LeaderboardEntry[] = [
+          { id: "dummy-1", userId: "dummy_Beta Tester", compressionRatio: 94, fileName: "dummy_hero_banner.json" },
+          { id: "dummy-2", userId: "dummy_Early Adopter", compressionRatio: 89, fileName: "dummy_loading_spinner.json" },
+          { id: "dummy-3", userId: "dummy_Lottie Enthusiast", compressionRatio: 82, fileName: "dummy_success_check.json" },
+          { id: "dummy-4", userId: "dummy_Motion Designer", compressionRatio: 76, fileName: "dummy_menu_icon.json" },
+          { id: "dummy-5", userId: "dummy_Frontend Dev", compressionRatio: 71, fileName: "dummy_error_state.json" },
+          { id: "dummy-6", userId: "dummy_Product Hunter", compressionRatio: 65, fileName: "dummy_payment_success.json" },
+          { id: "dummy-7", userId: "dummy_UI Expert", compressionRatio: 58, fileName: "dummy_onboarding_step1.json" },
+        ];
+
+        const allData = [...data, ...dummyData];
+
         // Filter valid ratios (>= 50%) and sort descending by compression ratio
-        const sortedData = data
+        const sortedData = allData
           .filter(item => typeof item.compressionRatio === 'number' && item.compressionRatio >= 50)
           .sort((a, b) => b.compressionRatio - a.compressionRatio);
           
@@ -61,12 +73,14 @@ export default function LeaderboardPage() {
   }, []);
 
   const anonymizeUserId = (userId: string) => {
+    if (userId?.startsWith('dummy_')) return userId.replace('dummy_', '');
     if (!userId || userId === "anonim") return "user_anonymous";
     const lastChars = userId.length > 4 ? userId.slice(-4) : userId;
     return `user_***${lastChars}`;
   };
 
   const anonymizeFileName = (fileName: string) => {
+    if (fileName?.startsWith('dummy_')) return fileName.replace('dummy_', '');
     if (!fileName) return "hidden_file.json";
     const ext = fileName.includes('.') ? fileName.split('.').pop() : "json";
     return `hidden_file_***.${ext}`;
