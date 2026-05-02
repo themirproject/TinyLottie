@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import { X, Zap, Check, Heart } from 'lucide-react';
 import { Button } from './ui/button';
@@ -19,8 +20,21 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
     return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
+  const [promoCode, setPromoCode] = useState('');
+  const [isPromoApplied, setIsPromoApplied] = useState(false);
+  const [promoError, setPromoError] = useState('');
+
   const handleUpgrade = () => {
     window.open('https://www.shopier.com/themirproject/46280901', '_blank');
+  };
+
+  const handleApplyPromo = () => {
+    if (promoCode.toUpperCase() === 'PH20') {
+      setIsPromoApplied(true);
+      setPromoError('');
+    } else {
+      setPromoError('Invalid promo code');
+    }
   };
 
   return (
@@ -52,7 +66,14 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
         <div className="p-6">
           <div className="mb-6">
             <div className="flex items-baseline gap-2 mb-4">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">$39</span>
+              {isPromoApplied ? (
+                <>
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">$31.20</span>
+                  <span className="text-xl text-gray-400 line-through">$39</span>
+                </>
+              ) : (
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">$39</span>
+              )}
               <span className="text-gray-600 dark:text-gray-400 font-medium">/ lifetime</span>
               <span className="ml-2 text-xs font-bold text-[#00DDB3] bg-[#00DDB3]/10 px-2 py-1 rounded-full border border-[#00DDB3]/20">
                 ONE-TIME PAYMENT
@@ -112,6 +133,38 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Promo Code */}
+          <div className="mb-6">
+            {!isPromoApplied ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Promo code"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#00DDB3]/50"
+                  onKeyDown={(e) => e.key === 'Enter' && handleApplyPromo()}
+                />
+                <Button
+                  onClick={handleApplyPromo}
+                  variant="outline"
+                  className="px-4 py-2 text-sm"
+                >
+                  Apply
+                </Button>
+              </div>
+            ) : (
+              <div className="p-3 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 rounded-lg">
+                <p className="text-sm text-green-600 dark:text-green-400 font-medium text-center">
+                  🎉 Welcome Product Hunter! Your 20% discount has been applied.
+                </p>
+              </div>
+            )}
+            {promoError && (
+              <p className="text-xs text-red-500 mt-2">{promoError}</p>
+            )}
           </div>
 
           {/* CTA Buttons */}
