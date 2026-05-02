@@ -478,6 +478,23 @@ function AppContent() {
               </p>
             </motion.div>
 
+            {/* Product Hunt Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="flex justify-center mb-8 sm:mb-10"
+            >
+              <a href="https://www.producthunt.com/products/tinylottie?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-tinylottie" target="_blank" rel="noopener noreferrer">
+                <img 
+                  alt="TinyLottie - Smart Lottie optimization for high-performance SaaS. | Product Hunt" 
+                  width="250" 
+                  height="54" 
+                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1137402&theme=light&t=1777724244780" 
+                />
+              </a>
+            </motion.div>
+
             {/* Drag & Drop - Primary CTA */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
