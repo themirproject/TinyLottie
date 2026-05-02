@@ -91,6 +91,22 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
+        {/* PROMO BANNER */}
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] rounded-2xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-center justify-between shadow-lg relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2" />
+          <div className="relative z-10 text-center sm:text-left mb-4 sm:mb-0">
+            <h3 className="text-xl sm:text-2xl font-bold mb-2">🎁 Special Offer!</h3>
+            <p className="text-white/90 text-sm sm:text-base">Be the first to optimize and win 1 month of Pro!</p>
+          </div>
+          <Link href="/" className="relative z-10 px-6 py-3 bg-white text-[#00DDB3] hover:bg-gray-50 font-bold rounded-xl transition-colors shadow-sm">
+            Optimize Now
+          </Link>
+        </motion.div>
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#00DDB3]" />
@@ -98,10 +114,25 @@ export default function LeaderboardPage() {
         ) : (
           <div className="bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden">
             {entries.length === 0 ? (
-              <div className="p-12 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center">
-                <FileJson className="w-12 h-12 mb-4 opacity-20" />
-                <p>No optimizations performed in the last 24 hours.</p>
-                <p className="text-sm mt-1 font-medium text-[#00DDB3]">You could be the first champion!</p>
+              <div className="p-16 text-center text-gray-500 dark:text-gray-400 flex flex-col items-center justify-center min-h-[400px] relative overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-100 to-transparent dark:from-gray-800/30 dark:to-transparent opacity-50" />
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                  className="relative z-10 flex flex-col items-center"
+                >
+                  <div className="w-24 h-24 mb-6 rounded-full bg-gradient-to-br from-[#00DDB3]/20 to-[#00C9A7]/10 flex items-center justify-center shadow-inner">
+                    <Trophy className="w-12 h-12 text-[#00DDB3]" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">No records yet, be the pioneer!</h3>
+                  <p className="text-base text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8">
+                    The leaderboard is currently empty for the last 24 hours. This is your chance to claim the top spot!
+                  </p>
+                  <Link href="/" className="px-8 py-3 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-xl font-bold transition-all transform hover:scale-105 shadow-md">
+                    Start Competing
+                  </Link>
+                </motion.div>
               </div>
             ) : (
               <div className="divide-y divide-gray-100 dark:divide-gray-800/50">
