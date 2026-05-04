@@ -94,6 +94,18 @@ export default function LeaderboardPage() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Link>
+
+          {/* BENCHMARK BANNER */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
+            <div className="text-2xl">🎯</div>
+            <div className="text-blue-800 dark:text-blue-300 font-medium text-sm sm:text-base text-center sm:text-left">
+              <strong>Beat the record!</strong> Can you optimize better than our 92% benchmark?
+            </div>
+          </motion.div>
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="p-3 sm:p-4 bg-yellow-100 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-500 rounded-2xl sm:rounded-3xl">
               <Trophy className="w-8 h-8 sm:w-10 sm:h-10" />
