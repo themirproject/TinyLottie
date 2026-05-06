@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         // All standard web crawlers — allow everything except API routes
         userAgent: '*',
-        allow: '/',
+        allow: ['/', '/llms.txt'],
         disallow: ['/api/', '/_next/'],
       },
       // --- LLM / AI crawlers — explicitly allowed for discoverability ---

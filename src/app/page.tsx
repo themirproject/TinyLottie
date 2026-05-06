@@ -455,7 +455,7 @@ function AppContent() {
               animate={{ opacity: 1, y: 0 }}
               className="text-center mb-6 sm:mb-8 mt-4 sm:mt-6 lg:mt-0"
             >
-              <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-5 lg:mb-4 mt-2 sm:mt-3 lg:mt-0 leading-tight px-4">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-5 lg:mb-4 mt-2 sm:mt-3 lg:mt-0 leading-tight px-4">
                 <span className="text-gray-900 dark:text-white">
                   Make Your{" "}
                 </span>
@@ -466,33 +466,14 @@ function AppContent() {
                 <span className="bg-gradient-to-r from-[#00DDB3] via-[#00C9A7] to-[#00DDB3] bg-clip-text text-transparent animate-gradient">
                   Lighter Than Air
                 </span>
-              </h2>
+              </h1>
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed px-4">
-                Shrink animation file sizes{" "}
+                Shrink After Effects JSON and dotLottie animation file sizes{" "}
                 <span className="font-semibold text-[#00DDB3]">
                   up to 98%
                 </span>{" "}
-                while preserving every frame of beauty. No
-                uploads, no compromises, just pure optimization
-                magic.
+                while preserving every frame. The ultimate Bodymovin optimizer with zero uploads and 100% privacy.
               </p>
-            </motion.div>
-
-            {/* Product Hunt Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="flex justify-center mb-8 sm:mb-10"
-            >
-              <a href="https://www.producthunt.com/products/tinylottie?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-tinylottie" target="_blank" rel="noopener noreferrer">
-                <img 
-                  alt="TinyLottie - Smart Lottie optimization for high-performance SaaS. | Product Hunt" 
-                  width="250" 
-                  height="54" 
-                  src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1137402&theme=light&t=1777724244780" 
-                />
-              </a>
             </motion.div>
 
             {/* Drag & Drop - Primary CTA */}

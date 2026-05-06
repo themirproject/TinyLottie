@@ -73,21 +73,62 @@ export default function RootLayout({
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "WebSite",
+        "@id": "https://tinylottie.com/#website",
+        "url": "https://tinylottie.com/",
+        "name": "TinyLottie",
+        "description": "Blazing Fast Lottie & dotLottie Optimizer",
+        "publisher": {
+          "@id": "https://tinylottie.com/#organization"
+        }
+      },
+      {
         "@type": "Organization",
+        "@id": "https://tinylottie.com/#organization",
         "name": "TinyLottie",
         "url": "https://tinylottie.com",
+        "logo": "https://tinylottie.com/favicon.ico"
       },
       {
         "@type": "SoftwareApplication",
         "name": "TinyLottie Optimizer",
         "operatingSystem": "Any",
         "applicationCategory": "UtilitiesApplication",
-        "description": "Compress Lottie and dotLottie animations instantly right in your browser.",
+        "browserRequirements": "Requires HTML5 Canvas and WebAssembly support",
+        "featureList": [
+          "Lottie JSON compression",
+          "dotLottie conversion",
+          "WebP image optimization",
+          "Zero-upload privacy",
+          "Up to 98% file size reduction"
+        ],
+        "description": "Compress Lottie and dotLottie animations instantly right in your browser. No uploads required, ensuring 100% privacy.",
         "offers": {
           "@type": "Offer",
           "price": "0",
           "priceCurrency": "USD"
         }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Are my files uploaded to your servers?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. TinyLottie processes everything locally in your browser. Your files never leave your device, ensuring 100% privacy."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is dotLottie?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "dotLottie is an open-source format that compresses Lottie JSON and its assets into a single zipped file, reducing size and network requests."
+            }
+          }
+        ]
       }
     ]
   };
