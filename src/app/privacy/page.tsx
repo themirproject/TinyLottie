@@ -75,7 +75,7 @@ export default function PrivacyPage() {
               <li><strong>Firebase / Google Cloud</strong> — authentication and database (Google Privacy Policy applies)</li>
               <li><strong>Vercel</strong> — hosting and edge functions</li>
               <li><strong>Google Analytics</strong> — anonymous usage metrics</li>
-              <li><strong>Shopier</strong> — payment processing for PRO licenses (Shopier Privacy Policy applies)</li>
+              <li><strong>Lemon Squeezy</strong> — payment processing for PRO licenses (Lemon Squeezy Privacy Policy applies)</li>
             </ul>
           </section>
 

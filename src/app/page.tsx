@@ -39,6 +39,8 @@ import {
   Heart,
   Trophy,
   Lightbulb,
+  Check,
+  X,
 } from "lucide-react";
 import tipsData from "../../tips.json";
 
@@ -415,7 +417,7 @@ function AppContent() {
                 <span className="hidden md:inline">Leaderboard</span>
               </Link>
               <a
-                href="https://www.shopier.com/themirproject"
+                href="https://tiny-lottie.lemonsqueezy.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] hover:from-[#00C9A7] hover:to-[#00DDB3] text-white rounded-lg font-medium transition-all transform hover:scale-105"
@@ -560,6 +562,130 @@ function AppContent() {
 
             {/* Blog Section */}
             <BlogSection />
+
+            {/* Pricing Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="mb-10 sm:mb-12 lg:mb-16 max-w-5xl mx-auto"
+            >
+              <div className="text-center mb-8 sm:mb-10 lg:mb-12 px-4">
+                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
+                  Simple, Transparent Pricing
+                </h3>
+                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                  Pay once, use forever. No hidden fees, no subscriptions.
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto px-4">
+                {/* Free Plan */}
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Free Plan</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Perfect for casual optimization and small projects.</p>
+                    
+                    <div className="flex items-baseline gap-2 mb-6">
+                      <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$0</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">/ forever</span>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">File limit up to 5 MB</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">100% offline local processing</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Lottie & dotLottie optimization</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">WebP image compression</span>
+                      </div>
+                      <div className="flex items-center gap-3 opacity-50">
+                        <X className="w-5 h-5 text-gray-400" />
+                        <span className="text-sm text-gray-500 line-through">Unlimited file sizes</span>
+                      </div>
+                      <div className="flex items-center gap-3 opacity-50">
+                        <X className="w-5 h-5 text-gray-400" />
+                        <span className="text-sm text-gray-500 line-through">Priority email support</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold"
+                    onClick={handleReset}
+                  >
+                    Start Optimizing
+                  </Button>
+                </div>
+
+                {/* PRO Plan */}
+                <div className="bg-white dark:bg-gray-900 border-2 border-[#00DDB3] rounded-3xl p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] text-white text-[10px] font-bold tracking-wider uppercase py-1 px-4 rounded-bl-xl">
+                    Popular
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Lifetime PRO</h4>
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">For designers, developers, and power users.</p>
+                    
+                    <div className="flex items-baseline gap-2 mb-6">
+                      <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$39</span>
+                      <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">/ lifetime</span>
+                      <span className="ml-2 text-[10px] font-bold text-[#00DDB3] bg-[#00DDB3]/10 px-2 py-0.5 rounded-full border border-[#00DDB3]/20">
+                        ONE-TIME
+                      </span>
+                    </div>
+
+                    <div className="space-y-4 mb-8">
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-900 dark:text-gray-200 font-medium">Unlimited file sizes (no limits)</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">100% offline local processing</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">WebP image compression</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Priority email support</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Check className="w-5 h-5 text-[#00DDB3]" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Early access to Figma plugin & API</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+                        <span className="text-sm text-gray-600 dark:text-gray-300">Support active development</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href="https://tiny-lottie.lemonsqueezy.com/checkout/buy/bd608657-cc51-4309-8d90-55b138f65f68"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center w-full h-12 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-all transform hover:scale-[1.02]"
+                  >
+                    Upgrade to Pro
+                  </a>
+                </div>
+              </div>
+            </motion.div>
 
             {/* FAQ Section */}
             <FAQ />
