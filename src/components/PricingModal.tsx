@@ -21,7 +21,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
   };
 
   const handleUpgrade = () => {
-    window.open('https://tiny-lottie.lemonsqueezy.com/checkout/buy/bd608657-cc51-4309-8d90-55b138f65f68', '_blank');
+    window.open('https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8', '_blank');
   };
 
   return (

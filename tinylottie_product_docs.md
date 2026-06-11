@@ -54,7 +54,7 @@ TinyLottie is a **100% browser-based Lottie animation optimizer** built for desi
 | **Free** | $0 | Up to 5 MB |
 | **PRO** | **$39** — One-Time Payment (Lifetime) | Unlimited |
 
-PRO is activated via a coupon code purchased at [tiny-lottie.lemonsqueezy.com](https://tiny-lottie.lemonsqueezy.com/checkout/buy/bd608657-cc51-4309-8d90-55b138f65f68). No subscriptions. No renewals. Pay once, use forever.
+PRO is activated via a coupon code purchased at [tiny-lottie.lemonsqueezy.com](https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8). No subscriptions. No renewals. Pay once, use forever.
 
 ---
 
