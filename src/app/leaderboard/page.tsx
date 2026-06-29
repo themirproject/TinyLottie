@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where, Timestamp } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Trophy, Loader2, FileJson, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -21,14 +21,11 @@ export default function LeaderboardPage() {
   useEffect(() => {
     async function fetchLeaderboard() {
       try {
-        const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-        
-        // We fetch logs from the last 24 hours
-        // Client-side sorting is used to avoid requiring a composite index in Firestore.
+        // We fetch top 50 logs of all time sorted by compression ratio
         const q = query(
           collection(db, "usage_logs"),
-          where("timestamp", ">=", Timestamp.fromDate(twentyFourHoursAgo))
+          orderBy("compressionRatio", "desc"),
+          limit(50)
         );
         
         const snapshot = await getDocs(q);
@@ -112,7 +109,7 @@ export default function LeaderboardPage() {
             </div>
             <div>
               <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white">Optimization Champions</h1>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 sm:mt-2">Files with the highest efficiency ratio in the last 24 hours.</p>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-1 sm:mt-2">Files with the highest efficiency ratio of all time.</p>
             </div>
           </div>
         </div>
