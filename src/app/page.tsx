@@ -151,11 +151,12 @@ function AppContent() {
       } else if (obj && typeof obj === "object") {
         const cleaned: any = {};
         for (const key in obj) {
-          // Remove metadata and unnecessary properties
-          if (
-            !["nm", "mn", "hd", "cl"].includes(key) ||
-            obj[key] !== ""
-          ) {
+          // Exclude metadata properties completely
+          if (!["nm", "mn", "cl"].includes(key)) {
+            // Keep "hd" only if it is true (default is false)
+            if (key === "hd" && obj[key] !== true) {
+              continue;
+            }
             cleaned[key] = removeUnusedProps(obj[key]);
           }
         }
@@ -233,10 +234,13 @@ function AppContent() {
           if (match && supportedFormats.includes(match[1])) {
             try {
               const { dataUrl, width, height } = await convertImageToWebpClient(asset.p);
-              asset.p = dataUrl;
-              // Preserve structural metadata in the asset if it doesn't magically exist
-              if (!asset.w) asset.w = width;
-              if (!asset.h) asset.h = height;
+              // Only replace if the WebP base64 is actually smaller than the original base64
+              if (dataUrl.length < asset.p.length) {
+                asset.p = dataUrl;
+                // Preserve structural metadata in the asset if it doesn't magically exist
+                if (!asset.w) asset.w = width;
+                if (!asset.h) asset.h = height;
+              }
             } catch (err) {
               console.warn("Failed to convert image to webp in browser:", err);
             }
@@ -244,9 +248,23 @@ function AppContent() {
         }
       }
 
+      // Check if optimized size is larger than original size
+      const originalBytes = lottieData.file.size;
+      const optimizedBytes = new Blob([JSON.stringify(cleanedData)]).size;
+      
+      let finalData = cleanedData;
+      let finalOptimizedBytes = optimizedBytes;
+      let isAlreadyOptimized = false;
+
+      if (optimizedBytes > originalBytes) {
+        finalData = lottieData.data; // Fallback to original data
+        finalOptimizedBytes = originalBytes;
+        isAlreadyOptimized = true;
+      }
+
       setLottieData({
         ...lottieData,
-        optimizedData: cleanedData,
+        optimizedData: finalData,
       });
 
       // Randomly pick a tip
@@ -256,15 +274,13 @@ function AppContent() {
       // Log optimization to database if user is logged in
       if (user) {
         try {
-          const originalBytes = lottieData.file.size;
-          const optimizedBytes = new Blob([JSON.stringify(cleanedData)]).size;
-          const ratio = Math.round(((originalBytes - optimizedBytes) / originalBytes) * 100);
+          const ratio = Math.round(((originalBytes - finalOptimizedBytes) / originalBytes) * 100);
 
           await addDoc(collection(db, "usage_logs"), {
             userId: user.uid,
             fileName: lottieData.file.name,
             originalSize: formatFileSize(originalBytes),
-            optimizedSize: formatFileSize(optimizedBytes),
+            optimizedSize: formatFileSize(finalOptimizedBytes),
             compressionRatio: ratio,
             timestamp: serverTimestamp()
           });
@@ -273,7 +289,11 @@ function AppContent() {
         }
       }
 
-      toast.success("Lottie optimized successfully offline!");
+      if (isAlreadyOptimized) {
+        toast.info("Your file is already highly optimized. Original file was preserved.");
+      } else {
+        toast.success("Lottie optimized successfully offline!");
+      }
     } catch (error) {
       console.error(error);
       setOptimizationError(true);
