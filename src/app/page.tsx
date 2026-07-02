@@ -424,6 +424,34 @@ function AppContent() {
               </h1>
             </motion.div>
 
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-6">
+              <Link
+                href="/#features"
+                className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-[#00DDB3] transition-colors"
+              >
+                Features
+              </Link>
+              <Link
+                href="/#blog"
+                className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-[#00DDB3] transition-colors"
+              >
+                How to Optimize
+              </Link>
+              <Link
+                href="/#pricing"
+                className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-[#00DDB3] transition-colors"
+              >
+                Pricing
+              </Link>
+              <Link
+                href="/#faq"
+                className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-[#00DDB3] transition-colors"
+              >
+                FAQ
+              </Link>
+            </nav>
+
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -436,15 +464,6 @@ function AppContent() {
                 <Trophy className="w-4 h-4 text-yellow-500" />
                 <span className="hidden md:inline">Leaderboard</span>
               </Link>
-              <a
-                href="https://tiny-lottie.lemonsqueezy.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] hover:from-[#00C9A7] hover:to-[#00DDB3] text-white rounded-lg font-medium transition-all transform hover:scale-105"
-              >
-                <Heart className="w-4 h-4" />
-                Support Us
-              </a>
               {user ? (
                 <Link
                   href="/profile"
@@ -459,7 +478,7 @@ function AppContent() {
                   onClick={loginWithGoogle}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium transition-all"
                 >
-                  Login
+                  Get Started
                 </button>
               )}
               <ThemeToggle />
@@ -510,10 +529,11 @@ function AppContent() {
 
             {/* Features Section - Now Visible Above Fold */}
             <motion.div
+              id="features"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="mb-10 sm:mb-12 lg:mb-16"
+              className="mb-10 sm:mb-12 lg:mb-16 scroll-mt-20"
             >
               <div className="text-center mb-8 sm:mb-10 lg:mb-12 px-4">
                 <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
@@ -581,15 +601,18 @@ function AppContent() {
             </motion.div>
 
             {/* Blog Section */}
-            <BlogSection />
+            <div id="blog" className="scroll-mt-20">
+              <BlogSection />
+            </div>
 
             {/* Pricing Section */}
             <motion.div
+              id="pricing"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="mb-10 sm:mb-12 lg:mb-16 max-w-5xl mx-auto"
+              className="mb-10 sm:mb-12 lg:mb-16 max-w-5xl mx-auto scroll-mt-20"
             >
               <div className="text-center mb-8 sm:mb-10 lg:mb-12 px-4">
                 <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
@@ -708,7 +731,9 @@ function AppContent() {
             </motion.div>
 
             {/* FAQ Section */}
-            <FAQ />
+            <div id="faq" className="scroll-mt-20">
+              <FAQ />
+            </div>
           </div>
         ) : (
           // Optimization View
