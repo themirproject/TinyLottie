@@ -17,6 +17,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FAQ } from "@/components/FAQ";
 import { BlogSection } from "@/components/BlogSection";
+import { LiveResults } from "@/components/LiveResults";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { motion } from "motion/react";
@@ -37,7 +38,6 @@ import {
   Layers,
   Loader2,
   Heart,
-  Trophy,
   Lightbulb,
   Check,
   X,
@@ -433,10 +433,10 @@ function AppContent() {
                 Features
               </Link>
               <Link
-                href="/#blog"
+                href="/#results"
                 className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-[#00DDB3] transition-colors"
               >
-                How to Optimize
+                Results
               </Link>
               <Link
                 href="/#pricing"
@@ -457,13 +457,6 @@ function AppContent() {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-3"
             >
-              <Link
-                href="/leaderboard"
-                className="hidden sm:flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
-              >
-                <Trophy className="w-4 h-4 text-yellow-500" />
-                <span className="hidden md:inline">Leaderboard</span>
-              </Link>
               {user ? (
                 <Link
                   href="/profile"
@@ -599,6 +592,9 @@ function AppContent() {
                 </div>
               </div>
             </motion.div>
+
+            {/* Live Results Section */}
+            <LiveResults />
 
             {/* Blog Section */}
             <div id="blog" className="scroll-mt-20">
