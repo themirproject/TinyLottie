@@ -40,17 +40,7 @@ export default function LeaderboardPage() {
           };
         });
 
-        const dummyData: LeaderboardEntry[] = [
-          { id: "dummy-1", userId: "dummy_Beta Tester", compressionRatio: 94, fileName: "dummy_hero_banner.json" },
-          { id: "dummy-2", userId: "dummy_Early Adopter", compressionRatio: 89, fileName: "dummy_loading_spinner.json" },
-          { id: "dummy-3", userId: "dummy_Lottie Enthusiast", compressionRatio: 82, fileName: "dummy_success_check.json" },
-          { id: "dummy-4", userId: "dummy_Motion Designer", compressionRatio: 76, fileName: "dummy_menu_icon.json" },
-          { id: "dummy-5", userId: "dummy_Frontend Dev", compressionRatio: 71, fileName: "dummy_error_state.json" },
-          { id: "dummy-6", userId: "dummy_Product Hunter", compressionRatio: 65, fileName: "dummy_payment_success.json" },
-          { id: "dummy-7", userId: "dummy_UI Expert", compressionRatio: 58, fileName: "dummy_onboarding_step1.json" },
-        ];
-
-        const allData = [...data, ...dummyData];
+        const allData = data;
 
         // Filter valid ratios (>= 50%) and sort descending by compression ratio
         const sortedData = allData

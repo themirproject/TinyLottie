@@ -660,7 +660,7 @@ function AppContent() {
                     <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">For designers, developers, and power users.</p>
                     
                     <div className="flex items-baseline gap-2 mb-6">
-                      <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$39</span>
+                      <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$99</span>
                       <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">/ lifetime</span>
                       <span className="ml-2 text-[10px] font-bold text-[#00DDB3] bg-[#00DDB3]/10 px-2 py-0.5 rounded-full border border-[#00DDB3]/20">
                         ONE-TIME
