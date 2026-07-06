@@ -439,7 +439,7 @@ function AppContent() {
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 relative overflow-x-hidden">
+    <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 relative">
 
       {/* Background Gradient Glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
