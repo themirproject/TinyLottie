@@ -40,23 +40,28 @@ export function LiveResults() {
   useEffect(() => {
     async function fetchLogs() {
       try {
-        const q = query(
-          collection(db, "usage_logs"),
-          orderBy("timestamp", "desc"),
-          limit(50)
-        );
-        const snapshot = await getDocs(q);
-        const dbLogs = snapshot.docs.map(doc => {
-          const docData = doc.data();
-          return {
-            id: doc.id,
-            fileName: docData.fileName || "animation.json",
-            originalSize: docData.originalSize || "0 KB",
-            optimizedSize: docData.optimizedSize || "0 KB",
-            compressionRatio: docData.compressionRatio || 0,
-            userId: docData.userId || "anonim"
-          };
-        });
+        let dbLogs: OptimizationLog[] = [];
+        try {
+          const q = query(
+            collection(db, "usage_logs"),
+            orderBy("timestamp", "desc"),
+            limit(50)
+          );
+          const snapshot = await getDocs(q);
+          dbLogs = snapshot.docs.map(doc => {
+            const docData = doc.data();
+            return {
+              id: doc.id,
+              fileName: docData.fileName || "animation.json",
+              originalSize: docData.originalSize || "0 KB",
+              optimizedSize: docData.optimizedSize || "0 KB",
+              compressionRatio: docData.compressionRatio || 0,
+              userId: docData.userId || "anonim"
+            };
+          });
+        } catch (fetchError) {
+          console.warn("Failed to fetch live logs from Firestore, using preseeded fallback:", fetchError);
+        }
 
         // Deduplication structures
         const uniqueLogs: OptimizationLog[] = [];
@@ -98,7 +103,7 @@ export function LiveResults() {
         // Keep exactly 7 items
         setLogs(uniqueLogs.slice(0, 7));
       } catch (error) {
-        console.error("Error fetching live results:", error);
+        console.error("Error processing live results:", error);
       } finally {
         setLoading(false);
       }
