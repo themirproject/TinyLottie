@@ -635,7 +635,9 @@ function AppContent() {
             </motion.div>
 
             {/* Live Results Section */}
-            <LiveResults />
+            <div id="results" className="scroll-mt-20">
+              <LiveResults />
+            </div>
 
             {/* Blog Section */}
             <div id="blog" className="scroll-mt-20">
