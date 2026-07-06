@@ -58,7 +58,7 @@ export function BlogSection() {
         </motion.div>
 
         {/* Horizontal list — compact, scannable */}
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-px bg-gray-200 dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-800">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 sm:gap-6 mt-8">
           {tips.map((tip, index) => (
             <motion.div
               key={index}
@@ -66,7 +66,7 @@ export function BlogSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.07 }}
-              className="group bg-white dark:bg-gray-900 p-5 flex flex-col gap-3 hover:bg-[#00DDB3]/5 dark:hover:bg-[#00DDB3]/5 transition-colors"
+              className="group bg-white dark:bg-gray-900/40 p-5 rounded-2xl border border-gray-100 dark:border-gray-800/80 flex flex-col gap-3 hover:border-[#00DDB3] hover:shadow-lg hover:shadow-[#00DDB3]/5 transition-all"
             >
               <div className="w-9 h-9 rounded-lg bg-[#00DDB3]/10 flex items-center justify-center group-hover:bg-[#00DDB3]/20 transition-colors">
                 <tip.icon className="w-5 h-5 text-[#00DDB3]" />
