@@ -39,6 +39,12 @@ interface UsageLog {
   timestamp: any;
 }
 
+interface AnalyticsEventLog {
+  id: string;
+  event: string;
+  timestamp: any;
+}
+
 // Parse "X.XX MB" / "X.XX KB" strings into bytes
 function parseSize(str: string): number {
   if (!str) return 0;
@@ -59,6 +65,7 @@ const ADMIN_EMAIL = "emir.kalayci@gmail.com";
 export default function AdminPage() {
   const { user, loading } = useAuth();
   const [logs, setLogs] = useState<UsageLog[]>([]);
+  const [events, setEvents] = useState<AnalyticsEventLog[]>([]);
   const [fetching, setFetching] = useState(true);
   const [filter, setFilter] = useState<"all" | "24h" | "7d" | "30d">("all");
   const [search, setSearch] = useState("");
@@ -73,12 +80,24 @@ export default function AdminPage() {
           collection(db, "usage_logs"),
           orderBy("timestamp", "desc")
         );
-        const snapshot = await getDocs(q);
+        const eq = query(
+          collection(db, "analytics_events"),
+          orderBy("timestamp", "desc")
+        );
+        const [snapshot, esnapshot] = await Promise.all([
+          getDocs(q),
+          getDocs(eq),
+        ]);
         const data = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as UsageLog[];
+        const edata = esnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as AnalyticsEventLog[];
         setLogs(data);
+        setEvents(edata);
       } catch (error) {
         console.error("Error fetching logs:", error);
       } finally {
@@ -123,6 +142,41 @@ export default function AdminPage() {
 
     return result;
   }, [logs, filter, search]);
+
+  const filteredEvents = useMemo(() => {
+    let result = events;
+
+    // Time filter
+    if (filter !== "all") {
+      const cutoff = new Date();
+      if (filter === "24h") cutoff.setHours(cutoff.getHours() - 24);
+      if (filter === "7d") cutoff.setDate(cutoff.getDate() - 7);
+      if (filter === "30d") cutoff.setDate(cutoff.getDate() - 30);
+      result = result.filter((e) => {
+        const ts = e.timestamp?.toDate ? e.timestamp.toDate() : new Date(e.timestamp);
+        return ts >= cutoff;
+      });
+    }
+
+    return result;
+  }, [events, filter]);
+
+  const eventCounts = useMemo(() => {
+    const counts: Record<string, number> = {
+      file_loaded: 0,
+      paywall_hit: 0,
+      upgrade_click: 0,
+      paywall_dismissed: 0,
+      optimization_complete: 0,
+      optimized_file_download: 0,
+    };
+    filteredEvents.forEach((e) => {
+      if (e.event in counts) {
+        counts[e.event]++;
+      }
+    });
+    return counts;
+  }, [filteredEvents]);
 
   const stats = useMemo(() => {
     const totalOriginal = filtered.reduce(
@@ -352,10 +406,19 @@ export default function AdminPage() {
               { event: "optimization_complete", label: "Optimized", icon: <Zap className="w-4 h-4" />, color: "text-[#00DDB3] bg-[#00DDB3]/10" },
               { event: "optimized_file_download", label: "Downloads", icon: <Download className="w-4 h-4" />, color: "text-purple-500 bg-purple-50 dark:bg-purple-900/20" },
             ].map((e) => (
-              <div key={e.event} className={`rounded-xl p-3 ${e.color.split(" ")[1]}`}>
-                <div className={`mb-2 ${e.color.split(" ")[0]}`}>{e.icon}</div>
-                <p className="text-[11px] font-medium text-gray-700 dark:text-gray-300">{e.label}</p>
-                <p className="text-[10px] text-gray-400 font-mono mt-0.5">{e.event}</p>
+              <div key={e.event} className={`rounded-xl p-4 flex flex-col justify-between ${e.color.split(" ")[1]}`}>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`p-1.5 rounded-lg bg-white/50 dark:bg-black/20 ${e.color.split(" ")[0]}`}>
+                      {e.icon}
+                    </span>
+                    <span className="text-xl font-bold text-gray-900 dark:text-white">
+                      {(eventCounts[e.event] || 0).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{e.label}</p>
+                </div>
+                <p className="text-[10px] text-gray-400 font-mono mt-2">{e.event}</p>
               </div>
             ))}
           </div>

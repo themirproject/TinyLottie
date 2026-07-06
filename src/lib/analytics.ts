@@ -2,11 +2,12 @@
  * TinyLottie Analytics Utility
  * --------------------------------
  * Thin wrapper around Google Analytics (gtag) that fires custom events.
+ * Also logs events to Firestore "analytics_events" collection for admin tracking.
  * All events are anonymous — no file content, no PII is sent.
- *
- * GA4 event names follow snake_case convention.
- * Custom dimensions visible in GA4 → Reports → Custom → Event parameters.
  */
+
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 declare global {
   interface Window {
@@ -20,6 +21,18 @@ function gtag(...args: any[]) {
   }
 }
 
+async function logToFirestore(eventName: string, params: Record<string, any> = {}) {
+  try {
+    await addDoc(collection(db, "analytics_events"), {
+      event: eventName,
+      timestamp: serverTimestamp(),
+      ...params,
+    });
+  } catch (error) {
+    console.error("Failed to log event to firestore:", error);
+  }
+}
+
 // ─── File Upload ────────────────────────────────────────────────────────────
 
 /**
@@ -30,6 +43,10 @@ export function trackFileLoaded(params: {
   fileExtension: string; // "json" | "lottie"
 }) {
   gtag("event", "file_loaded", {
+    file_size_kb: Math.round(params.fileSizeKb),
+    file_extension: params.fileExtension,
+  });
+  logToFirestore("file_loaded", {
     file_size_kb: Math.round(params.fileSizeKb),
     file_extension: params.fileExtension,
   });
@@ -50,6 +67,11 @@ export function trackPaywallHit(params: {
     file_size_mb: params.fileSizeMb,
     limit_mb: 3,
   });
+  logToFirestore("paywall_hit", {
+    file_size_kb: Math.round(params.fileSizeKb),
+    file_size_mb: params.fileSizeMb,
+    limit_mb: 3,
+  });
 }
 
 /**
@@ -60,6 +82,10 @@ export function trackPaywallUpgradeClick(source: "modal" | "pricing_section" | "
     source,
     plan: "lifetime_pro",
   });
+  logToFirestore("upgrade_click", {
+    source,
+    plan: "lifetime_pro",
+  });
 }
 
 /**
@@ -67,6 +93,7 @@ export function trackPaywallUpgradeClick(source: "modal" | "pricing_section" | "
  */
 export function trackPaywallDismissed() {
   gtag("event", "paywall_dismissed");
+  logToFirestore("paywall_dismissed");
 }
 
 // ─── Optimization ───────────────────────────────────────────────────────────
@@ -89,6 +116,13 @@ export function trackOptimizationComplete(params: {
     already_optimized: params.isAlreadyOptimized,
     user_tier: params.userTier,
   });
+  logToFirestore("optimization_complete", {
+    original_size_kb: Math.round(params.originalSizeKb),
+    optimized_size_kb: Math.round(params.optimizedSizeKb),
+    compression_ratio_pct: params.compressionRatioPct,
+    already_optimized: params.isAlreadyOptimized,
+    user_tier: params.userTier,
+  });
 }
 
 /**
@@ -96,6 +130,7 @@ export function trackOptimizationComplete(params: {
  */
 export function trackOptimizationError() {
   gtag("event", "optimization_error");
+  logToFirestore("optimization_error");
 }
 
 // ─── Download ───────────────────────────────────────────────────────────────
@@ -113,6 +148,11 @@ export function trackDownload(params: {
     optimized_size_kb: Math.round(params.optimizedSizeKb),
     compression_ratio_pct: params.compressionRatioPct,
   });
+  logToFirestore("optimized_file_download", {
+    download_format: params.format,
+    optimized_size_kb: Math.round(params.optimizedSizeKb),
+    compression_ratio_pct: params.compressionRatioPct,
+  });
 }
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
@@ -122,6 +162,7 @@ export function trackDownload(params: {
  */
 export function trackSignIn(method: "google" | "email") {
   gtag("event", "login", { method });
+  logToFirestore("login", { method });
 }
 
 /**
@@ -129,4 +170,5 @@ export function trackSignIn(method: "google" | "email") {
  */
 export function trackSignUp(method: "google" | "email") {
   gtag("event", "sign_up", { method });
+  logToFirestore("sign_up", { method });
 }

@@ -66,8 +66,8 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
                 ONE-TIME PAYMENT
               </span>
             </div>
-            <p className="text-gray-600 dark:text-gray-400">
-              Get lifetime access to unlimited file sizes and support the development of TinyLottie.
+            <p className="text-gray-600 dark:text-gray-400 font-medium text-sm leading-relaxed border-l-2 border-[#00DDB3] pl-3 py-1 bg-gray-50 dark:bg-gray-900 rounded-r-lg">
+              You are trying to optimize a large file. TinyLottie reduces files by up to 85% on average. Upgrade to Pro to process files up to 50MB instantly.
             </p>
           </div>
 
