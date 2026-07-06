@@ -1,0 +1,49 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: Check if user is the administrator
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'emir.kalayci@gmail.com';
+    }
+
+    // Helper: Check if request is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // 1. Users collection
+    // - Users can read their own profile details (e.g. isPro status)
+    // - Writing/Redeeming coupons to change isPro is handled strictly server-side via API route (Admin SDK)
+    match /users/{userId} {
+      allow read: if isAuth() && request.auth.uid == userId;
+      allow write: if false; // Block client-side updates (prevents self-upgrading to PRO)
+    }
+
+    // 2. Coupons collection
+    // - Handled strictly server-side in the /api/activate endpoint using Admin SDK
+    // - Client-side read/write is completely blocked to prevent code leakage and coupon scanning
+    match /coupons/{couponId} {
+      allow read, write: if false;
+    }
+
+    // 3. Usage Logs collection
+    // - Authenticated users can log their own compressions
+    // - Admin can view all logs
+    match /usage_logs/{logId} {
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin() || (isAuth() && resource.data.userId == request.auth.uid);
+      allow update, delete: if false; // Block tempering with compression history
+    }
+
+    // 4. Analytics Events collection
+    // - Anyone can log anonymous client-side events (load, hit paywall, dismiss, download)
+    // - Only admin can read and aggregate events for dashboard analysis
+    match /analytics_events/{eventId} {
+      allow create: if true; // Open to write events
+      allow read: if isAdmin();
+      allow update, delete: if false; // Block tempering with logs
+    }
+  }
+}
