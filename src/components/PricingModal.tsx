@@ -1,6 +1,6 @@
 
 import { motion } from 'motion/react';
-import { X, Zap } from 'lucide-react';
+import { X, Zap, Check, Heart } from 'lucide-react';
 import { Button } from './ui/button';
 import { trackPaywallUpgradeClick, trackPaywallDismissed } from '@/lib/analytics';
 
