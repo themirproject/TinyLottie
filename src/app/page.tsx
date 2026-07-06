@@ -18,6 +18,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { FAQ } from "@/components/FAQ";
 import { BlogSection } from "@/components/BlogSection";
 import { LiveResults } from "@/components/LiveResults";
+import { SEOGuides } from "@/components/SEOGuides";
 import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { motion } from "motion/react";
@@ -65,7 +66,7 @@ function AppContent() {
   const [largeFileSize, setLargeFileSize] = useState(0);
   const [currentTip, setCurrentTip] = useState("");
 
-  const FILE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB in bytes
+  const FILE_SIZE_LIMIT = 3 * 1024 * 1024; // 3MB in bytes
 
   // Set dynamic favicon
   useEffect(() => {
@@ -119,7 +120,7 @@ function AppContent() {
       setLargeFileSize(file.size);
       setShowPricingModal(true);
       toast.error(
-        `File size exceeds 5MB limit. Upgrade to Pro for unlimited file sizes.`,
+        `File size exceeds 3MB limit. Upgrade to Pro for unlimited file sizes.`,
       );
       return;
     }
@@ -634,7 +635,7 @@ function AppContent() {
                     <div className="space-y-4 mb-8">
                       <div className="flex items-center gap-3">
                         <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">File limit up to 5 MB</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">File limit up to 3 MB</span>
                       </div>
                       <div className="flex items-center gap-3">
                         <Check className="w-5 h-5 text-[#00DDB3]" />
@@ -725,6 +726,9 @@ function AppContent() {
                 </div>
               </div>
             </motion.div>
+
+            {/* SEO Guides Section */}
+            <SEOGuides />
 
             {/* FAQ Section */}
             <div id="faq" className="scroll-mt-20">

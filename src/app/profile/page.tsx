@@ -201,7 +201,7 @@ export default function ProfilePage() {
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-bold rounded-full text-sm">
-                      Free Tier (5MB Limit)
+                      <span><strong>Free tier limit:</strong> Files up to 3MB can be optimized for free</span>
                     </span>
                   )}
                   <button onClick={logout} className="text-sm text-red-500 hover:text-red-600 font-medium flex items-center gap-1">

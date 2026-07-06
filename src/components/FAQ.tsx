@@ -108,7 +108,7 @@ export function FAQ() {
           <ul className="space-y-2 ml-4">
             <li className="flex items-start gap-2">
               <span className="text-[#00DDB3] mt-1">•</span>
-              <span><strong>Free tier limit:</strong> Files up to 5MB can be optimized for free</span>
+              <span><strong>Free tier limit:</strong> Files up to 3MB can be optimized for free</span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-[#00DDB3] mt-1">•</span>
@@ -120,7 +120,7 @@ export function FAQ() {
             </li>
           </ul>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">
-            For files larger than 5MB or enterprise needs, consider upgrading to our Pro plan for unlimited processing and priority support.
+            For files larger than 3MB or enterprise needs, consider upgrading to our Pro plan for unlimited processing and priority support.
           </p>
         </div>
       ),
