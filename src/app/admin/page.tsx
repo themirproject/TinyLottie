@@ -67,6 +67,7 @@ export default function AdminPage() {
   const [logs, setLogs] = useState<UsageLog[]>([]);
   const [events, setEvents] = useState<AnalyticsEventLog[]>([]);
   const [fetching, setFetching] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "24h" | "7d" | "30d">("all");
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
@@ -75,6 +76,7 @@ export default function AdminPage() {
     async function fetchLogs() {
       if (user?.email !== ADMIN_EMAIL) return;
       setFetching(true);
+      setError(null);
       try {
         const q = query(
           collection(db, "usage_logs"),
@@ -98,8 +100,9 @@ export default function AdminPage() {
         })) as AnalyticsEventLog[];
         setLogs(data);
         setEvents(edata);
-      } catch (error) {
-        console.error("Error fetching logs:", error);
+      } catch (err: any) {
+        console.error("Error fetching logs:", err);
+        setError(err.message || String(err));
       } finally {
         setFetching(false);
       }
@@ -286,6 +289,17 @@ export default function AdminPage() {
             </Link>
           </div>
         </div>
+
+        {/* Error Banner */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/30 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div>
+              <h3 className="text-sm font-semibold text-red-800 dark:text-red-400">Database Query Failed</h3>
+              <p className="text-xs text-red-700 dark:text-red-300/80 mt-1">{error}</p>
+            </div>
+          </div>
+        )}
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
