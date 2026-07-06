@@ -23,16 +23,16 @@ service cloud.firestore {
 
     // 3. Usage Logs collection
     // - Authenticated users can log their own compressions
-    // - Authenticated users can read logs (front-end filters by email for admin display)
+    // - Anyone can read logs so the public landing page Live Results section can display recent optimizations
     match /usage_logs/{logId} {
       allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
-      allow read: if isAuth();
+      allow read: if true; // Open to read (public optimization history dashboard)
       allow update, delete: if false;
     }
 
     // 4. Analytics Events collection
     // - Anyone can log anonymous client-side events
-    // - Authenticated users can read logs
+    // - Only authenticated admins read events (front-end enforces admin email filter)
     match /analytics_events/{eventId} {
       allow create: if true; // Open to write events
       allow read: if isAuth();

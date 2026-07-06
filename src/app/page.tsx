@@ -651,7 +651,7 @@ function AppContent() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="mb-10 sm:mb-12 lg:mb-16 max-w-5xl mx-auto scroll-mt-20"
+              className="pt-16 sm:pt-20 lg:pt-24 mt-16 sm:mt-20 mb-10 sm:mb-12 lg:mb-16 max-w-5xl mx-auto scroll-mt-20"
             >
               <div className="text-center mb-8 sm:mb-10 lg:mb-12 px-4">
                 <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
