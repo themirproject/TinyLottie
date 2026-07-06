@@ -1,94 +1,155 @@
-import { motion } from "motion/react";
-import { ChevronDown } from "lucide-react";
-import { useState } from "react";
+"use client";
 
-const guides = [
+import { motion, AnimatePresence } from "motion/react";
+import { useState } from "react";
+import { ArrowRight, ChevronRight } from "lucide-react";
+
+const platforms = [
   {
     slug: "webflow",
-    question: "How to reduce Lottie file size in Webflow",
-    answer: `Webflow automatically renders Lottie animations via its built-in Lottie player, but large JSON files can seriously impact your page load time and Core Web Vitals scores. Here's how to reduce Lottie size specifically for Webflow projects:
-
-**Step 1 — Compress with TinyLottie before uploading.** Export your animation from After Effects using the Bodymovin plugin, then drag and drop the .json file into TinyLottie. TinyLottie strips layer names, metadata, and hidden elements — reducing file sizes by 50–98% without any visual difference.
-
-**Step 2 — Convert to dotLottie format.** TinyLottie can output .lottie files (dotLottie), a zipped binary format that's typically 30–40% smaller than raw JSON. Webflow's Lottie player supports standard JSON, so keep the .json version for Webflow uploads; use the .lottie output for custom-code embeds.
-
-**Step 3 — Lazy-load your animation.** In Webflow, wrap your Lottie element in a div with the "Start Animation" trigger set to "Scroll into view" instead of "Page load." This defers the Lottie parser until the element is actually visible, reducing initial page weight.
-
-**Step 4 — Audit embedded images.** If your Lottie animation references embedded PNG or JPEG assets (common in character animations), TinyLottie converts them to WebP during optimization — cutting image asset size by an additional 30–60%.`,
+    label: "Webflow",
+    emoji: "🌐",
+    tagline: "Improve Core Web Vitals with smaller Lottie assets",
+    color: "from-blue-500/20 to-indigo-500/20",
+    border: "border-blue-500/30",
+    accent: "#4F6EF7",
+    steps: [
+      {
+        title: "Export from Bodymovin",
+        body: "Export your AE animation as Lottie JSON via the Bodymovin plugin — uncheck 'Original Asset Names' to trim extra metadata before you even start.",
+      },
+      {
+        title: "Compress with TinyLottie",
+        body: "Drop the .json into TinyLottie. It strips layer names, hidden elements, and rounds float precision. Most Webflow Lottie files shrink 50–98%.",
+      },
+      {
+        title: "Lazy-load in Webflow",
+        body: "Set the 'Start Animation' trigger to 'Scroll into view' instead of 'Page load' — this defers parser work until the element is visible.",
+      },
+      {
+        title: "Use dotLottie for custom code",
+        body: "For Webflow custom code embeds, use the .lottie output from TinyLottie — 30–40% smaller than JSON and loads faster over the network.",
+      },
+    ],
   },
   {
     slug: "react-native",
-    question: "Optimizing Lottie animations for React Native",
-    answer: `React Native renders Lottie animations using the lottie-react-native library, which parses JSON on the JS thread. Large or complex animations can cause frame drops, janky transitions, and excessive memory usage on lower-end Android devices. Follow these steps to optimize:
-
-**Why file size matters more on mobile.** Unlike browsers, React Native cannot cache and reuse parsed Lottie data across component remounts by default. Every screen navigation that mounts a Lottie component re-parses the full JSON. A 2MB animation file can add 150–300ms of CPU blocking time on mid-range devices.
-
-**Step 1 — Run through TinyLottie first.** Upload your .json to TinyLottie and enable maximum compression. The optimizer removes nm (name) and mn (match name) properties — these are only needed by design tools, not at runtime. It also rounds float precision from 6 decimal places to 3, which has zero visual impact but cuts numeric payload significantly.
-
-**Step 2 — Remove unused layers programmatically.** If you're showing only a portion of an animation (e.g., a progress state), delete unused layers before shipping. TinyLottie handles this automatically by stripping layers marked as hidden (hd: true).
-
-**Step 3 — Cache parsed animations.** Use lottie-react-native's ref API with animationFinished callbacks and memoize animation sources with useMemo() or React.memo() to prevent redundant re-parsing.
-
-**Step 4 — Prefer dotLottie on React Native.** The @lottiefiles/dotlottie-react-native package supports the binary .lottie format, which is parsed faster than JSON and transfers quicker over the network. TinyLottie outputs dotLottie files directly.`,
+    label: "React Native",
+    emoji: "📱",
+    tagline: "Cut JS thread parse time and memory on mobile",
+    color: "from-cyan-500/20 to-teal-500/20",
+    border: "border-cyan-500/30",
+    accent: "#00B8D4",
+    steps: [
+      {
+        title: "Why size matters more on mobile",
+        body: "React Native re-parses the full JSON on every component mount. A 2MB file can add 150–300ms of CPU blocking on mid-range Android devices.",
+      },
+      {
+        title: "Compress before bundling",
+        body: "Run your .json through TinyLottie first. It removes nm/mn properties (only needed by design tools) and rounds floats — invisible to the renderer.",
+      },
+      {
+        title: "Cache with useMemo",
+        body: "Memoize your animation source with useMemo() or React.memo() to prevent redundant re-parsing across screen navigations.",
+      },
+      {
+        title: "Use dotLottie format",
+        body: "Switch to @lottiefiles/dotlottie-react-native. The .lottie binary format parses faster than JSON and is smaller to transfer over the network.",
+      },
+    ],
   },
   {
     slug: "after-effects",
-    question: "How to compress After Effects JSON exports (Bodymovin / LottieFiles)",
-    answer: `When you export a Lottie animation from After Effects using the Bodymovin extension or the LottieFiles AE plugin, the resulting JSON file contains a significant amount of data that is only useful during design — not at runtime. Here's how to compress After Effects exports effectively:
-
-**Why AE exports are large by default.** The Bodymovin exporter includes layer names, composition names, match names, expression metadata, and guide layers in the output. On complex compositions with many layers, this metadata alone can account for 20–40% of total file size.
-
-**Step 1 — Enable "Bodymovin glyphs only" and disable unnecessary options.** In the Bodymovin export dialog, uncheck "Original Asset Names" and "Slot IDs" if you don't use the LottieFiles theming API. Also enable "Glyph compression" for text-heavy animations.
-
-**Step 2 — Run the export through TinyLottie.** TinyLottie's JSON optimizer strips all non-runtime properties: nm (layer name), mn (match name), cl (class), and hidden layer flags. For a typical AE character rig with 50–80 layers, this alone saves 15–35%.
-
-**Step 3 — Reduce float precision.** AE's math engine stores keyframe values with 6–8 decimal places (e.g., 359.9999847). TinyLottie rounds all numeric values to 3 decimal places, which the Lottie runtime renders identically but at a fraction of the string length.
-
-**Step 4 — Check for pre-comp redundancy.** Pre-compositions that are only used once add nesting overhead. Collapse single-use pre-comps before export when possible. TinyLottie will further clean the resulting JSON, but flatter composition structures always compress better.
-
-**Step 5 — Convert embedded assets to WebP.** If your AE composition uses embedded raster layers (PNG logos, photo backgrounds), TinyLottie converts base64-encoded PNG/JPEG assets to WebP during optimization, often saving 40–70% on asset weight.`,
+    label: "After Effects",
+    emoji: "🎬",
+    tagline: "Strip Bodymovin bloat from AE exports",
+    color: "from-violet-500/20 to-purple-500/20",
+    border: "border-violet-500/30",
+    accent: "#9B59F5",
+    steps: [
+      {
+        title: "Disable unnecessary export options",
+        body: "In Bodymovin, uncheck 'Original Asset Names' and 'Slot IDs'. Enable 'Glyph compression' for text layers. These tweaks alone cut 10–20% before optimization.",
+      },
+      {
+        title: "Run through TinyLottie",
+        body: "TinyLottie strips nm (layer name), mn (match name), cl (class), and hidden layer flags. For a typical 50-layer rig, this saves 15–35%.",
+      },
+      {
+        title: "Float precision trimming",
+        body: "AE stores keyframe values with 6–8 decimal places (e.g. 359.9999847). TinyLottie rounds to 3, identical visually but far smaller as a string.",
+      },
+      {
+        title: "Embedded asset WebP conversion",
+        body: "If your AE comp has raster layers (logos, backgrounds), TinyLottie converts base64 PNG/JPEG assets to WebP — 40–70% smaller.",
+      },
+    ],
   },
   {
     slug: "figma",
-    question: "How to optimize Lottie files exported from Figma",
-    answer: `Figma's native animation export (via plugins like LottieFiles for Figma or Jitter) produces Lottie JSON that can be significantly larger than necessary due to how Figma represents vector paths. Here's how to optimize Figma-exported Lottie files:
-
-**The Figma vector problem.** Figma stores shapes as bezier curves with many redundant anchor points. When exported to Lottie format, these translate into dense path data arrays. A simple icon animation exported from Figma can be 3–5x larger than the same animation created directly in After Effects.
-
-**Step 1 — Simplify paths before export.** In Figma, use the "Flatten Selection" command (Cmd/Ctrl + E) on complex vector shapes before running the Lottie export plugin. This merges overlapping paths and removes invisible anchor points.
-
-**Step 2 — Compress with TinyLottie after export.** Drag the exported .json into TinyLottie. The optimizer rounds bezier curve coordinates to 3 decimal places and strips metadata. For Figma exports specifically, users typically see 45–75% file size reductions.
-
-**Step 3 — Remove hidden layers.** Figma plugins sometimes export hidden or masked layers that contribute to file size. TinyLottie automatically removes layers where hd (hidden) is true.
-
-**Step 4 — Use dotLottie for web delivery.** TinyLottie can output the dotLottie (.lottie) format, which applies ZIP compression on top of JSON minification. For Figma exports with many path nodes, this can achieve 80%+ total reduction from the original export.`,
+    label: "Figma",
+    emoji: "🎨",
+    tagline: "Fix Figma's path bloat before shipping",
+    color: "from-pink-500/20 to-rose-500/20",
+    border: "border-pink-500/30",
+    accent: "#F25BA2",
+    steps: [
+      {
+        title: "Flatten paths before export",
+        body: "Figma stores bezier curves with many redundant anchors. Use Flatten Selection (Cmd+E) before running the LottieFiles or Jitter plugin to pre-simplify.",
+      },
+      {
+        title: "Compress with TinyLottie",
+        body: "The optimizer rounds all bezier coordinates to 3 decimal places and removes metadata. Figma exports typically see 45–75% reductions.",
+      },
+      {
+        title: "Remove hidden/masked layers",
+        body: "Figma plugins sometimes export masked layers that contribute to weight. TinyLottie removes all layers where hd: true automatically.",
+      },
+      {
+        title: "Output as dotLottie",
+        body: "For Figma exports with dense path data, the dotLottie output applies ZIP compression on top — achieving 80%+ total reduction from the original.",
+      },
+    ],
   },
   {
     slug: "nextjs",
-    question: "Optimizing Lottie animations in Next.js (App Router & Pages Router)",
-    answer: `Next.js applications have unique Lottie optimization challenges: server-side rendering compatibility, dynamic imports, and Core Web Vitals impact. Here's the definitive guide to Lottie optimization for Next.js:
-
-**The SSR problem.** Lottie libraries use browser APIs (canvas, requestAnimationFrame) and cannot run on the server. Using lottie-react or @lottiefiles/react-lottie-player without dynamic imports will cause hydration errors in Next.js.
-
-**Step 1 — Always use dynamic import with ssr: false.** In both App Router and Pages Router, import Lottie components dynamically:
-\`\`\`
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
-\`\`\`
-
-**Step 2 — Compress your JSON with TinyLottie first.** Before importing animation data into your Next.js project, run it through TinyLottie. Reducing a 500KB animation to 80KB means 420KB less JavaScript parsed on every page load — directly improving your LCP and INP scores.
-
-**Step 3 — Store animations in /public and fetch lazily.** Instead of importing JSON directly (which bundles it into your JS), fetch from /public/animations/hero.json on the client. This splits animation data from your main bundle and allows browser caching.
-
-**Step 4 — Use Intersection Observer for trigger.** Don't autoplay Lottie animations on mount. Start playback only when the element enters the viewport. This improves perceived performance and saves CPU cycles on initial page load.`,
+    label: "Next.js",
+    emoji: "⚡",
+    tagline: "SSR-safe Lottie with optimal bundle impact",
+    color: "from-gray-400/20 to-gray-600/20",
+    border: "border-gray-400/30",
+    accent: "#888",
+    steps: [
+      {
+        title: "Always use dynamic import (ssr: false)",
+        body: "Lottie libraries use Canvas and rAF — they can't run server-side. Import dynamically: const Lottie = dynamic(() => import('lottie-react'), { ssr: false }).",
+      },
+      {
+        title: "Compress JSON with TinyLottie first",
+        body: "Reducing a 500KB animation to 80KB means 420KB less JS parsed on every page load — directly improving your LCP and INP Core Web Vitals scores.",
+      },
+      {
+        title: "Serve from /public, not your bundle",
+        body: "Fetch from /public/animations/hero.json on the client instead of importing JSON directly. This splits animation data from your JS bundle and enables browser caching.",
+      },
+      {
+        title: "Trigger with Intersection Observer",
+        body: "Don't autoplay on mount. Start animation playback only when the element enters the viewport — improves perceived performance and saves CPU on initial load.",
+      },
+    ],
   },
 ];
 
 export function SEOGuides() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [active, setActive] = useState(0);
+  const current = platforms[active];
 
   return (
-    <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gray-50 dark:bg-gray-900/50">
-      <div className="max-w-4xl mx-auto">
+    <section className="py-12 sm:py-16 lg:py-20 px-4">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
         <div className="text-center mb-10 sm:mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#00DDB3]/10 border border-[#00DDB3]/20 text-[#00DDB3] text-xs font-semibold mb-4 tracking-wider uppercase">
             Platform Guides
@@ -99,80 +160,104 @@ export function SEOGuides() {
               for Every Platform
             </span>
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base max-w-2xl mx-auto">
-            Step-by-step guides for reducing Lottie and dotLottie file sizes across Webflow, React Native, Next.js, After Effects, and Figma.
+          <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base max-w-xl mx-auto">
+            Pick your platform. Get the exact steps.
           </p>
         </div>
 
-        <div className="space-y-3">
-          {guides.map((guide, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <motion.div
-                key={guide.slug}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden"
-              >
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
-                  aria-expanded={isOpen}
-                >
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white leading-snug">
-                    {guide.question}
-                  </h3>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
+        {/* Tab Row */}
+        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-none">
+          {platforms.map((p, i) => (
+            <button
+              key={p.slug}
+              onClick={() => setActive(i)}
+              className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border ${
+                active === i
+                  ? "bg-[#00DDB3] text-white border-[#00DDB3] shadow-lg shadow-[#00DDB3]/25"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-800 hover:border-[#00DDB3]/50"
+              }`}
+            >
+              <span>{p.emoji}</span>
+              <span>{p.label}</span>
+            </button>
+          ))}
+        </div>
 
-                {isOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="px-6 pb-6"
-                  >
-                    <div className="pt-1 border-t border-gray-100 dark:border-gray-800">
-                      <div className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                        {guide.answer.split("\n\n").map((paragraph, pIdx) => {
-                          // Bold **text** handling
-                          const parts = paragraph.split(/(\*\*[^*]+\*\*)/g);
-                          const rendered = parts.map((part, i) =>
-                            part.startsWith("**") && part.endsWith("**") ? (
-                              <strong key={i} className="text-gray-900 dark:text-white font-semibold">
-                                {part.slice(2, -2)}
-                              </strong>
-                            ) : (
-                              <span key={i}>{part}</span>
-                            )
-                          );
-                          // Code block handling
-                          if (paragraph.includes("```")) {
-                            const code = paragraph.replace(/```[\s\S]*?```/g, (match) => {
-                              return match.replace(/```[a-z]*/g, "").replace(/```/g, "").trim();
-                            });
-                            return (
-                              <pre key={pIdx} className="bg-gray-100 dark:bg-gray-800 rounded-lg px-4 py-3 text-xs overflow-x-auto font-mono text-gray-800 dark:text-gray-200">
-                                {code.replace(/```[\s\S]*?```/g, "").replace(/```/g, "").trim()}
-                              </pre>
-                            );
-                          }
-                          return (
-                            <p key={pIdx}>{rendered}</p>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </motion.div>
-            );
-          })}
+        {/* Content Panel */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={current.slug}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22 }}
+            className={`rounded-2xl border bg-gradient-to-br ${current.color} ${current.border} overflow-hidden`}
+          >
+            {/* Panel header */}
+            <div className="px-6 py-5 border-b border-white/10 dark:border-gray-800/60">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{current.emoji}</span>
+                <div>
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                    {current.label}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {current.tagline}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Steps — horizontal on desktop, vertical on mobile */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-white/20 dark:bg-gray-800/30">
+              {current.steps.map((step, i) => (
+                <div
+                  key={i}
+                  className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-sm p-5 flex flex-col gap-2"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ backgroundColor: current.accent }}
+                    >
+                      {i + 1}
+                    </span>
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+                      {step.title}
+                    </h4>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed pl-8">
+                    {step.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA footer */}
+            <div className="px-6 py-4 flex items-center justify-between flex-wrap gap-3 bg-white/40 dark:bg-gray-900/40">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                TinyLottie handles all the heavy lifting — just drag &amp; drop your file.
+              </span>
+              <a
+                href="/"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00DDB3] hover:gap-2.5 transition-all"
+              >
+                Try it free <ArrowRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* SEO hidden text — Google indexes, not shown prominently to users */}
+        <div className="sr-only">
+          {platforms.map((p) => (
+            <div key={p.slug}>
+              <h3>{p.label} Lottie optimization guide</h3>
+              {p.steps.map((s, i) => (
+                <p key={i}>{s.title}: {s.body}</p>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     </section>
