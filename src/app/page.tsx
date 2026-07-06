@@ -20,6 +20,14 @@ import { BlogSection } from "@/components/BlogSection";
 import { LiveResults } from "@/components/LiveResults";
 import { SEOGuides } from "@/components/SEOGuides";
 import { Toaster } from "@/components/ui/sonner";
+import {
+  trackFileLoaded,
+  trackPaywallHit,
+  trackPaywallDismissed,
+  trackOptimizationComplete,
+  trackOptimizationError,
+  trackDownload,
+} from "@/lib/analytics";
 import { toast } from "sonner";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
@@ -122,6 +130,11 @@ function AppContent() {
       toast.error(
         `File size exceeds 3MB limit. Upgrade to Pro for unlimited file sizes.`,
       );
+      // 🔥 Track paywall hit
+      trackPaywallHit({
+        fileSizeKb: file.size / 1024,
+        fileSizeMb: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+      });
       return;
     }
 
@@ -134,6 +147,11 @@ function AppContent() {
         optimizedData: null,
       });
       toast.success("Lottie file loaded successfully!");
+      // 🔥 Track successful file load
+      trackFileLoaded({
+        fileSizeKb: file.size / 1024,
+        fileExtension: file.name.endsWith('.lottie') ? 'lottie' : 'json',
+      });
     } catch (error) {
       toast.error(
         "Failed to parse Lottie file. Please ensure it's a valid JSON.",
@@ -290,6 +308,16 @@ function AppContent() {
         }
       }
 
+      // 🔥 Track optimization result
+      const compressionPct = Math.round(((originalBytes - finalOptimizedBytes) / originalBytes) * 100);
+      trackOptimizationComplete({
+        originalSizeKb: originalBytes / 1024,
+        optimizedSizeKb: finalOptimizedBytes / 1024,
+        compressionRatioPct: compressionPct,
+        isAlreadyOptimized,
+        userTier: !user ? 'anonymous' : isPro ? 'pro' : 'free',
+      });
+
       if (isAlreadyOptimized) {
         toast.info("Your file is already highly optimized. Original file was preserved.");
       } else {
@@ -298,6 +326,7 @@ function AppContent() {
     } catch (error) {
       console.error(error);
       setOptimizationError(true);
+      trackOptimizationError();
       toast.error("Failed to optimize Lottie file.");
     } finally {
       setIsOptimizing(false);
@@ -352,6 +381,17 @@ function AppContent() {
       URL.revokeObjectURL(url);
     }
 
+    // 🔥 Track download with format and compression stats
+    if (lottieData?.optimizedData) {
+      const originalBytes = lottieData.file.size;
+      const optimizedBytes = new Blob([JSON.stringify(lottieData.optimizedData)]).size;
+      const ratio = Math.round(((originalBytes - optimizedBytes) / originalBytes) * 100);
+      trackDownload({
+        format: outputFormat === 'lottie' ? 'lottie' : 'json',
+        optimizedSizeKb: optimizedBytes / 1024,
+        compressionRatioPct: ratio,
+      });
+    }
     toast.success("Download started!");
   };
 

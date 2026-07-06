@@ -1,7 +1,8 @@
 
 import { motion } from 'motion/react';
-import { X, Zap, Check, Heart } from 'lucide-react';
+import { X, Zap } from 'lucide-react';
 import { Button } from './ui/button';
+import { trackPaywallUpgradeClick, trackPaywallDismissed } from '@/lib/analytics';
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -21,7 +22,13 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
   };
 
   const handleUpgrade = () => {
+    trackPaywallUpgradeClick('modal');
     window.open('https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8', '_blank');
+  };
+
+  const handleClose = () => {
+    trackPaywallDismissed();
+    onClose();
   };
 
   return (
@@ -35,7 +42,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
         {/* Header */}
         <div className="relative bg-gradient-to-br from-[#00DDB3] to-[#00C9A7] p-6 text-white">
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute top-4 right-4 p-2 hover:bg-white/20 rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
@@ -126,7 +133,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
               Upgrade to Pro
             </Button>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="w-full text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
             >
               Maybe later
