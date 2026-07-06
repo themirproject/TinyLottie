@@ -36,7 +36,7 @@ const tips = [
 
 export function BlogSection() {
   return (
-    <section className="py-12 sm:py-16 lg:py-20 px-4 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+    <section className="py-12 sm:py-16 lg:py-20 px-4">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <motion.div
