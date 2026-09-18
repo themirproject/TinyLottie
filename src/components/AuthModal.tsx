@@ -126,30 +126,21 @@ export function AuthModal() {
             <X className="w-5 h-5" />
           </button>
 
-          {/* Header */}
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#00DDB3]/10 text-[#00DDB3] font-black text-xl mb-3">
-              TL
+          {/* Forgot Password Header */}
+          {mode === "forgot" && (
+            <div className="text-center mb-6 pt-2">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Reset your password
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Enter your email to receive a password reset link
+              </p>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {mode === "signin"
-                ? "Welcome back"
-                : mode === "signup"
-                ? "Create an account"
-                : "Reset your password"}
-            </h2>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-              {mode === "signin"
-                ? "Sign in with Google or your email to access TinyLottie PRO"
-                : mode === "signup"
-                ? "Any email provider is supported (Gmail, Outlook, Yahoo, etc.)"
-                : "Enter your email to receive a password reset link"}
-            </p>
-          </div>
+          )}
 
           {/* Segmented Tab Switcher */}
           {mode !== "forgot" && (
-            <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-5">
+            <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-5 mt-2 mr-8">
               <button
                 type="button"
                 onClick={() => {
