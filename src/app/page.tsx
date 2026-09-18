@@ -508,12 +508,20 @@ function AppContent() {
                   {isPro && <span className="text-[10px] font-bold bg-[#00DDB3] text-white px-1.5 py-0.5 rounded ml-1">PRO</span>}
                 </Link>
               ) : (
-                <button
-                  onClick={openAuthModal}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium transition-all"
-                >
-                  Get Started
-                </button>
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <button
+                    onClick={() => openAuthModal("signin")}
+                    className="px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                  >
+                    Log in
+                  </button>
+                  <button
+                    onClick={() => openAuthModal("signup")}
+                    className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium text-xs sm:text-sm transition-all shadow-xs"
+                  >
+                    Get Started
+                  </button>
+                </div>
               )}
               <ThemeToggle />
             </motion.div>

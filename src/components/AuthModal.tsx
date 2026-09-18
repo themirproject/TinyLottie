@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Mail, Lock, User, Loader2, AlertCircle, CheckCircle2, ArrowRight, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export function AuthModal() {
   const {
     isAuthModalOpen,
+    authModalMode,
     closeAuthModal,
     loginWithGoogle,
     loginWithEmail,
@@ -15,7 +16,7 @@ export function AuthModal() {
     resetPassword,
   } = useAuth();
 
-  const [mode, setMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "forgot">(authModalMode || "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -24,6 +25,14 @@ export function AuthModal() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthModalOpen) {
+      setMode(authModalMode || "signin");
+      setError(null);
+      setSuccessMessage(null);
+    }
+  }, [isAuthModalOpen, authModalMode]);
 
   if (!isAuthModalOpen) return null;
 
@@ -137,6 +146,42 @@ export function AuthModal() {
                 : "Enter your email to receive a password reset link"}
             </p>
           </div>
+
+          {/* Segmented Tab Switcher */}
+          {mode !== "forgot" && (
+            <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-5">
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signin");
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  mode === "signin"
+                    ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("signup");
+                  setError(null);
+                  setSuccessMessage(null);
+                }}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                  mode === "signup"
+                    ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-xs"
+                    : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+          )}
 
           {/* Google Sign-In Button */}
           {mode !== "forgot" && (

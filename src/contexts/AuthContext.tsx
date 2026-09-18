@@ -25,7 +25,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
   isAuthModalOpen: boolean;
-  openAuthModal: () => void;
+  authModalMode: "signin" | "signup" | "forgot";
+  openAuthModal: (mode?: "signin" | "signup" | "forgot") => void;
   closeAuthModal: () => void;
 }
 
@@ -40,6 +41,7 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
   refreshProStatus: async () => {},
   isAuthModalOpen: false,
+  authModalMode: "signin",
   openAuthModal: () => {},
   closeAuthModal: () => {},
 });
@@ -49,8 +51,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPro, setIsPro] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalMode, setAuthModalMode] = useState<"signin" | "signup" | "forgot">("signin");
 
-  const openAuthModal = () => setIsAuthModalOpen(true);
+  const openAuthModal = (mode?: "signin" | "signup" | "forgot") => {
+    if (mode) setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
   const closeAuthModal = () => setIsAuthModalOpen(false);
 
   // Checks and updates local context Pro status via Firestore & server sync
@@ -190,6 +196,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         refreshProStatus,
         isAuthModalOpen,
+        authModalMode,
         openAuthModal,
         closeAuthModal,
       }}
