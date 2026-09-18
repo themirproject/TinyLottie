@@ -28,35 +28,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPro, setIsPro] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Checks and updates local context Pro status via Firestore
+  // Checks and updates local context Pro status via Firestore & server sync
   const refreshProStatus = async () => {
     if (!auth.currentUser) {
       setIsPro(false);
       return;
     }
     try {
+      // 1. Sync with server (auto-elevates if Lemon Squeezy purchase is pending)
+      const token = await auth.currentUser.getIdToken();
+      if (token) {
+        const res = await fetch("/api/auth/sync", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setIsPro(data.isPro === true);
+          return;
+        }
+      }
+
+      // Fallback: direct Firestore read
       const userDocRef = doc(db, "users", auth.currentUser.uid);
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         setIsPro(userDoc.data().isPro === true);
-        if ((!userDoc.data().email || !userDoc.data().displayName) && auth.currentUser.email) {
-          setDoc(userDocRef, {
-            email: auth.currentUser.email,
-            displayName: auth.currentUser.displayName || "",
-          }, { merge: true }).catch(() => {});
-        }
       } else {
-        // Automatically create user structural document if never logged in before
-        await setDoc(userDocRef, {
-          email: auth.currentUser.email,
-          displayName: auth.currentUser.displayName || "",
-          createdAt: new Date().toISOString(),
-          isPro: false,
-        });
         setIsPro(false);
       }
     } catch (error) {
-      console.warn("Failed to check Pro status due to missing Firestore setup or permissions.", error);
+      console.warn("Failed to check Pro status.", error);
       setIsPro(false);
     }
   };
