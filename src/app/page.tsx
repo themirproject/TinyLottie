@@ -60,7 +60,7 @@ interface LottieData {
 }
 
 function AppContent() {
-  const { user, isPro, loginWithGoogle } = useAuth();
+  const { user, isPro, openAuthModal } = useAuth();
   const [lottieData, setLottieData] =
     useState<LottieData | null>(null);
   const [isOptimizing, setIsOptimizing] = useState(false);
@@ -509,7 +509,7 @@ function AppContent() {
                 </Link>
               ) : (
                 <button
-                  onClick={loginWithGoogle}
+                  onClick={openAuthModal}
                   className="flex items-center gap-2 px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium transition-all"
                 >
                   Get Started

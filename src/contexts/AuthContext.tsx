@@ -2,16 +2,31 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db, googleProvider } from "@/lib/firebase";
-import { signInWithPopup, signOut, User, onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile,
+  signOut,
+  User,
+  onAuthStateChanged,
+} from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 interface AuthContextType {
   user: User | null;
   isPro: boolean;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
+  loginWithEmail: (email: string, pass: string) => Promise<void>;
+  signupWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
+  isAuthModalOpen: boolean;
+  openAuthModal: () => void;
+  closeAuthModal: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -19,14 +34,24 @@ const AuthContext = createContext<AuthContextType>({
   isPro: false,
   loading: true,
   loginWithGoogle: async () => {},
+  loginWithEmail: async () => {},
+  signupWithEmail: async () => {},
+  resetPassword: async () => {},
   logout: async () => {},
   refreshProStatus: async () => {},
+  isAuthModalOpen: false,
+  openAuthModal: () => {},
+  closeAuthModal: () => {},
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isPro, setIsPro] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+
+  const openAuthModal = () => setIsAuthModalOpen(true);
+  const closeAuthModal = () => setIsAuthModalOpen(false);
 
   // Checks and updates local context Pro status via Firestore & server sync
   const refreshProStatus = async () => {
@@ -82,22 +107,64 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const loginWithGoogle = async () => {
-    // Keep loading=true so the profile page shows spinner, not "Access Denied"
     setLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
       if (result.user) {
-        // Force-refresh token so getIdToken() works immediately after login
         await result.user.getIdToken(true);
         await refreshProStatus();
         setUser(result.user);
+        closeAuthModal();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google login failed", error);
+      throw error;
     } finally {
-      // onAuthStateChanged may or may not fire again; always settle loading
       setLoading(false);
     }
+  };
+
+  const loginWithEmail = async (email: string, pass: string) => {
+    setLoading(true);
+    try {
+      const result = await signInWithEmailAndPassword(auth, email.trim(), pass);
+      if (result.user) {
+        await result.user.getIdToken(true);
+        await refreshProStatus();
+        setUser(result.user);
+        closeAuthModal();
+      }
+    } catch (error: any) {
+      console.error("Email login failed", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signupWithEmail = async (email: string, pass: string, name?: string) => {
+    setLoading(true);
+    try {
+      const result = await createUserWithEmailAndPassword(auth, email.trim(), pass);
+      if (result.user) {
+        if (name && name.trim()) {
+          await updateProfile(result.user, { displayName: name.trim() });
+        }
+        await result.user.getIdToken(true);
+        await refreshProStatus();
+        setUser(result.user);
+        closeAuthModal();
+      }
+    } catch (error: any) {
+      console.error("Email signup failed", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    await sendPasswordResetEmail(auth, email.trim());
   };
 
   const logout = async () => {
@@ -111,7 +178,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isPro, loading, loginWithGoogle, logout, refreshProStatus }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isPro,
+        loading,
+        loginWithGoogle,
+        loginWithEmail,
+        signupWithEmail,
+        resetPassword,
+        logout,
+        refreshProStatus,
+        isAuthModalOpen,
+        openAuthModal,
+        closeAuthModal,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

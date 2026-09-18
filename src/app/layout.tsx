@@ -97,6 +97,7 @@ export const metadata: Metadata = {
 };
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthModal } from "@/components/AuthModal";
 
 export default function RootLayout({
   children,
@@ -283,6 +284,7 @@ export default function RootLayout({
         />
         <AuthProvider>
           <Toaster />
+          <AuthModal />
           {children}
         </AuthProvider>
       </body>
