@@ -131,12 +131,28 @@ export async function POST(req: NextRequest) {
     const fromEmail =
       process.env.RESEND_FROM_EMAIL || "TinyLottie <login@tinylottie.com>";
 
-    const { error: resendError, data: resendData } = await resend.emails.send({
+    let { error: resendError, data: resendData } = await resend.emails.send({
       from: fromEmail,
       to: cleanEmail,
       subject: "Sign in to TinyLottie",
       html: getMagicLinkEmailHtml(magicLink, cleanEmail),
     });
+
+    // If custom domain is not yet verified on Resend, automatically fallback to test sender
+    if (resendError && fromEmail.includes("@tinylottie.com")) {
+      console.warn(
+        "[magic-link] Primary domain not yet verified, falling back to onboarding@resend.dev:",
+        resendError.message
+      );
+      const fallback = await resend.emails.send({
+        from: "TinyLottie <onboarding@resend.dev>",
+        to: cleanEmail,
+        subject: "Sign in to TinyLottie",
+        html: getMagicLinkEmailHtml(magicLink, cleanEmail),
+      });
+      resendError = fallback.error;
+      resendData = fallback.data;
+    }
 
     if (resendError) {
       console.error("[magic-link] Resend send error:", resendError);
