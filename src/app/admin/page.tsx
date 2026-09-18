@@ -7,6 +7,7 @@ import {
   getDocs,
   query,
   orderBy,
+  limit,
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import {
@@ -99,20 +100,22 @@ export default function AdminPage() {
 
   const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
 
-  // Fetch Usage Logs & Analytics
+  // Fetch Usage Logs & Analytics (only when Analytics tab is active)
   useEffect(() => {
     async function fetchLogs() {
-      if (!isAdmin) return;
+      if (!isAdmin || activeTab !== "analytics") return;
       setFetching(true);
       setError(null);
       try {
         const q = query(
           collection(db, "usage_logs"),
-          orderBy("timestamp", "desc")
+          orderBy("timestamp", "desc"),
+          limit(200)
         );
         const eq = query(
           collection(db, "analytics_events"),
-          orderBy("timestamp", "desc")
+          orderBy("timestamp", "desc"),
+          limit(200)
         );
         const [snapshot, esnapshot] = await Promise.all([
           getDocs(q),
@@ -136,12 +139,10 @@ export default function AdminPage() {
       }
     }
 
-    if (!loading && isAdmin) {
+    if (!loading && isAdmin && activeTab === "analytics") {
       fetchLogs();
-    } else if (!loading && !isAdmin) {
-      setFetching(false);
     }
-  }, [isAdmin, loading, refreshKey]);
+  }, [isAdmin, loading, activeTab, refreshKey]);
 
   // Fetch Users for Users Tab
   const fetchUsers = async () => {
