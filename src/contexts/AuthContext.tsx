@@ -4,6 +4,9 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db, googleProvider } from "@/lib/firebase";
 import {
   signInWithPopup,
+  sendSignInLinkToEmail,
+  isSignInWithEmailLink,
+  signInWithEmailLink,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -19,14 +22,16 @@ interface AuthContextType {
   isPro: boolean;
   loading: boolean;
   loginWithGoogle: () => Promise<void>;
+  sendMagicLink: (email: string) => Promise<void>;
+  confirmMagicLinkSignIn: (email: string) => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   signupWithEmail: (email: string, pass: string, name?: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
   isAuthModalOpen: boolean;
-  authModalMode: "signin" | "signup" | "forgot";
-  openAuthModal: (mode?: "signin" | "signup" | "forgot") => void;
+  authModalMode: "signin" | "signup" | "confirm-email";
+  openAuthModal: (mode?: "signin" | "signup" | "confirm-email") => void;
   closeAuthModal: () => void;
 }
 
@@ -35,6 +40,8 @@ const AuthContext = createContext<AuthContextType>({
   isPro: false,
   loading: true,
   loginWithGoogle: async () => {},
+  sendMagicLink: async () => {},
+  confirmMagicLinkSignIn: async () => {},
   loginWithEmail: async () => {},
   signupWithEmail: async () => {},
   resetPassword: async () => {},
@@ -51,9 +58,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isPro, setIsPro] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
-  const [authModalMode, setAuthModalMode] = useState<"signin" | "signup" | "forgot">("signin");
+  const [authModalMode, setAuthModalMode] = useState<"signin" | "signup" | "confirm-email">("signin");
 
-  const openAuthModal = (mode?: "signin" | "signup" | "forgot") => {
+  const openAuthModal = (mode?: "signin" | "signup" | "confirm-email") => {
     if (mode) setAuthModalMode(mode);
     setIsAuthModalOpen(true);
   };
@@ -112,6 +119,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => unsubscribe();
   }, []);
 
+  // Listen for incoming Magic Link redirects
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      const email = window.localStorage.getItem("emailForSignIn");
+      if (email) {
+        setLoading(true);
+        signInWithEmailLink(auth, email, window.location.href)
+          .then(async (result) => {
+            window.localStorage.removeItem("emailForSignIn");
+            window.history.replaceState({}, document.title, window.location.pathname);
+            if (result.user) {
+              await result.user.getIdToken(true);
+              await refreshProStatus();
+              setUser(result.user);
+              closeAuthModal();
+            }
+          })
+          .catch((err) => {
+            console.error("Auto sign-in with magic link failed:", err);
+            setAuthModalMode("confirm-email");
+            setIsAuthModalOpen(true);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        // Opened in a different browser/device where localStorage is absent
+        setAuthModalMode("confirm-email");
+        setIsAuthModalOpen(true);
+      }
+    }
+  }, []);
+
   const loginWithGoogle = async () => {
     setLoading(true);
     try {
@@ -124,6 +166,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error: any) {
       console.error("Google login failed", error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendMagicLink = async (email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://tinylottie.com";
+    const actionCodeSettings = {
+      url: `${origin}/?magicLink=true`,
+      handleCodeInApp: true,
+    };
+    await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("emailForSignIn", cleanEmail);
+    }
+  };
+
+  const confirmMagicLinkSignIn = async (email: string) => {
+    if (typeof window === "undefined") return;
+    const cleanEmail = email.trim().toLowerCase();
+    setLoading(true);
+    try {
+      const result = await signInWithEmailLink(auth, cleanEmail, window.location.href);
+      window.localStorage.removeItem("emailForSignIn");
+      window.history.replaceState({}, document.title, window.location.pathname);
+      if (result.user) {
+        await result.user.getIdToken(true);
+        await refreshProStatus();
+        setUser(result.user);
+        closeAuthModal();
+      }
+    } catch (error) {
+      console.error("Confirm magic link failed", error);
       throw error;
     } finally {
       setLoading(false);
@@ -190,6 +267,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         isPro,
         loading,
         loginWithGoogle,
+        sendMagicLink,
+        confirmMagicLinkSignIn,
         loginWithEmail,
         signupWithEmail,
         resetPassword,
