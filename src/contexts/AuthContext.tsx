@@ -39,10 +39,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userDoc = await getDoc(userDocRef);
       if (userDoc.exists()) {
         setIsPro(userDoc.data().isPro === true);
+        if ((!userDoc.data().email || !userDoc.data().displayName) && auth.currentUser.email) {
+          setDoc(userDocRef, {
+            email: auth.currentUser.email,
+            displayName: auth.currentUser.displayName || "",
+          }, { merge: true }).catch(() => {});
+        }
       } else {
         // Automatically create user structural document if never logged in before
         await setDoc(userDocRef, {
           email: auth.currentUser.email,
+          displayName: auth.currentUser.displayName || "",
           createdAt: new Date().toISOString(),
           isPro: false,
         });

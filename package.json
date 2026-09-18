@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "coupons:list": "node scripts/list-coupons.mjs",
+    "coupons:generate": "node scripts/generate-coupons.mjs",
+    "users:list": "node scripts/list-users.mjs"
   },
   "dependencies": {
     "@next/third-parties": "^16.2.4",
