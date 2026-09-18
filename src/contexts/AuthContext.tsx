@@ -174,12 +174,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const sendMagicLink = async (email: string) => {
     const cleanEmail = email.trim().toLowerCase();
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://tinylottie.com";
-    const actionCodeSettings = {
-      url: `${origin}/?magicLink=true`,
-      handleCodeInApp: true,
-    };
-    await sendSignInLinkToEmail(auth, cleanEmail, actionCodeSettings);
+
+    const res = await fetch("/api/auth/send-magic-link", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to send magic link.");
+    }
+
     if (typeof window !== "undefined") {
       window.localStorage.setItem("emailForSignIn", cleanEmail);
     }
