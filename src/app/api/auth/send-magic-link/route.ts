@@ -23,6 +23,21 @@ function getMagicLinkEmailHtml(magicLink: string, email: string): string {
       background-color: #f8fafc !important;
       color: #0f172a !important;
     }
+    /* Prevent Gmail mobile dark mode from inverting the button background */
+    .btn-mint {
+      background-color: #00DDB3 !important;
+      background-image: linear-gradient(#00DDB3, #00DDB3) !important;
+      color: #ffffff !important;
+    }
+    .btn-mint span {
+      color: #ffffff !important;
+    }
+    [data-ogsc] .btn-mint,
+    [data-ogsb] .btn-mint {
+      background-color: #00DDB3 !important;
+      background-image: linear-gradient(#00DDB3, #00DDB3) !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
@@ -58,11 +73,11 @@ function getMagicLinkEmailHtml(magicLink: string, email: string): string {
             </td>
           </tr>
 
-          <!-- CTA Button -->
+          <!-- CTA Button (Gradient background prevents Gmail dark mode inversion; White text) -->
           <tr>
             <td align="center" style="padding-bottom: 32px;">
-              <a href="${magicLink}" target="_blank" style="display: inline-block; background-color: #00DDB3; color: #000000; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 38px; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(0, 221, 179, 0.35);">
-                Log In to TinyLottie &rarr;
+              <a href="${magicLink}" target="_blank" class="btn-mint" style="display: inline-block; background-color: #00DDB3 !important; background-image: linear-gradient(0deg, #00DDB3, #00DDB3) !important; color: #ffffff !important; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 40px; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(0, 221, 179, 0.45); -webkit-text-size-adjust: none;">
+                <span style="color: #ffffff !important; font-weight: 700; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">Log In to TinyLottie &rarr;</span>
               </a>
             </td>
           </tr>
