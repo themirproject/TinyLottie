@@ -85,7 +85,7 @@ export default function AdminPage() {
   // Analytics & Logs state
   const [logs, setLogs] = useState<UsageLog[]>([]);
   const [events, setEvents] = useState<AnalyticsEventLog[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const [fetchingLogs, setFetchingLogs] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "24h" | "7d" | "30d">("all");
   const [search, setSearch] = useState("");
@@ -104,7 +104,7 @@ export default function AdminPage() {
   useEffect(() => {
     async function fetchLogs() {
       if (!isAdmin || activeTab !== "analytics") return;
-      setFetching(true);
+      setFetchingLogs(true);
       setError(null);
       try {
         const q = query(
@@ -135,7 +135,7 @@ export default function AdminPage() {
         console.error("Error fetching logs:", err);
         setError(err.message || String(err));
       } finally {
-        setFetching(false);
+        setFetchingLogs(false);
       }
     }
 
@@ -362,7 +362,7 @@ export default function AdminPage() {
   const freeCount = adminUsers.length - proCount;
 
   // ─── Loading / Auth guard ────────────────────────────────────────────
-  if (loading || fetching) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
         <Loader2 className="w-8 h-8 animate-spin text-[#00DDB3]" />
@@ -658,6 +658,12 @@ export default function AdminPage() {
         {/* USAGE & ANALYTICS TAB */}
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {activeTab === "analytics" && (
+          fetchingLogs && logs.length === 0 ? (
+            <div className="py-24 text-center">
+              <Loader2 className="w-8 h-8 animate-spin mx-auto text-[#00DDB3] mb-3" />
+              <p className="text-sm text-gray-500 dark:text-gray-400">Loading analytics & logs...</p>
+            </div>
+          ) : (
           <div className="space-y-6">
             {/* Error Banner */}
             {error && (
@@ -907,6 +913,7 @@ export default function AdminPage() {
               </div>
             </div>
           </div>
+          )
         )}
 
       </div>
