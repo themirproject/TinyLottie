@@ -10,6 +10,7 @@ import { LottiePreview } from "@/components/LottiePreview";
 import { OptimizationPanel } from "@/components/OptimizationPanel";
 import { FeatureCard } from "@/components/FeatureCard";
 import { PricingModal } from "@/components/PricingModal";
+import { ContactModal } from "@/components/ContactModal";
 import { HeroVisual } from "@/components/HeroVisual";
 import { OptimizationLoader } from "@/components/OptimizationLoader";
 import { OptimizationError } from "@/components/OptimizationError";
@@ -70,6 +71,8 @@ function AppContent() {
     "json" | "lottie"
   >("json");
   const [showPricingModal, setShowPricingModal] =
+    useState(false);
+  const [showContactModal, setShowContactModal] =
     useState(false);
   const [largeFileSize, setLargeFileSize] = useState(0);
   const [currentTip, setCurrentTip] = useState("");
@@ -782,7 +785,7 @@ function AppContent() {
 
             {/* FAQ Section */}
             <div id="faq" className="scroll-mt-20">
-              <FAQ />
+              <FAQ onOpenContact={() => setShowContactModal(true)} />
             </div>
           </div>
         ) : (
@@ -1074,12 +1077,13 @@ function AppContent() {
               Your files never leave your device.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 mb-3 sm:mb-4">
-              <a
-                href="mailto:emir.kalayci@gmail.com"
-                className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 hover:text-[#00DDB3] transition-colors"
+              <button
+                type="button"
+                onClick={() => setShowContactModal(true)}
+                className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 hover:text-[#00DDB3] transition-colors cursor-pointer"
               >
                 Support
-              </a>
+              </button>
               <span className="text-gray-300 dark:text-gray-700">·</span>
               <Link
                 href="/privacy"
@@ -1102,14 +1106,16 @@ function AppContent() {
         onClose={() => setShowPricingModal(false)}
         fileSize={largeFileSize}
       />
+
+      {/* Contact Modal */}
+      <ContactModal
+        isOpen={showContactModal}
+        onClose={() => setShowContactModal(false)}
+      />
     </div>
   );
 }
 
 export default function App() {
-  return (
-    <ThemeProvider>
-      <AppContent />
-    </ThemeProvider>
-  );
+  return <AppContent />;
 }

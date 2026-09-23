@@ -171,6 +171,7 @@ export async function POST(req: NextRequest) {
     let { error: resendError, data: resendData } = await resend.emails.send({
       from: fromEmail,
       to: cleanEmail,
+      replyTo: "emir.kalayci@gmail.com",
       subject: "Sign in to TinyLottie",
       html: getMagicLinkEmailHtml(magicLink, cleanEmail),
     });
@@ -184,6 +185,7 @@ export async function POST(req: NextRequest) {
       const fallback = await resend.emails.send({
         from: "TinyLottie <onboarding@resend.dev>",
         to: cleanEmail,
+        replyTo: "emir.kalayci@gmail.com",
         subject: "Sign in to TinyLottie",
         html: getMagicLinkEmailHtml(magicLink, cleanEmail),
       });

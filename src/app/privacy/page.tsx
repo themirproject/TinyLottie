@@ -97,8 +97,8 @@ export default function PrivacyPage() {
             </ul>
             <p className="mt-3">
               To exercise these rights, contact us at{" "}
-              <a href="mailto:emir.kalayci@gmail.com" className="text-[#00DDB3] hover:underline font-medium">
-                emir.kalayci@gmail.com
+              <a href="mailto:support@tinylottie.com" className="text-[#00DDB3] hover:underline font-medium">
+                support@tinylottie.com
               </a>.
             </p>
           </section>
@@ -123,8 +123,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-3">9. Contact</h2>
             <p>
               If you have any questions about this Privacy Policy, please contact us at{" "}
-              <a href="mailto:emir.kalayci@gmail.com" className="text-[#00DDB3] hover:underline font-medium">
-                emir.kalayci@gmail.com
+              <a href="mailto:support@tinylottie.com" className="text-[#00DDB3] hover:underline font-medium">
+                support@tinylottie.com
               </a>.
             </p>
           </section>

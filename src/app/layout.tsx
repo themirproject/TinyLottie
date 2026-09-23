@@ -98,6 +98,7 @@ export const metadata: Metadata = {
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { AuthModal } from "@/components/AuthModal";
+import { ThemeProvider } from "@/components/ThemeProvider";
 
 export default function RootLayout({
   children,
@@ -282,11 +283,13 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <AuthProvider>
-          <Toaster />
-          <AuthModal />
-          {children}
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Toaster />
+            <AuthModal />
+            {children}
+          </AuthProvider>
+        </ThemeProvider>
       </body>
       <GoogleAnalytics gaId="G-4CF9E7S9RK" />
       <Analytics />
