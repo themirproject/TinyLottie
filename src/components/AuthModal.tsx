@@ -158,7 +158,7 @@ export function AuthModal() {
                   ) : (
                     <RotateCw className="w-3.5 h-3.5" />
                   )}
-                  Resend magic link
+                  Resend login link
                 </button>
                 <button
                   type="button"
@@ -179,12 +179,14 @@ export function AuthModal() {
                     ? "Confirm your email"
                     : authModalMode === "signup"
                     ? "Get started with TinyLottie"
-                    : "Sign in to TinyLottie"}
+                    : "Log in to TinyLottie"}
                 </h2>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {authModalMode === "confirm-email"
-                    ? "Please enter your email to complete the sign-in process"
-                    : "Sign in or create an account with Google or a magic link"}
+                    ? "Please enter your email to complete the login process"
+                    : authModalMode === "signup"
+                    ? "Create your free account with Google or email"
+                    : "Sign in to your account with Google or email"}
                 </p>
               </div>
 
@@ -224,7 +226,7 @@ export function AuthModal() {
                     </div>
                     <div className="relative flex justify-center text-xs">
                       <span className="bg-white dark:bg-gray-900 px-3 text-gray-400">
-                        or with magic link
+                        or continue with email
                       </span>
                     </div>
                   </div>
@@ -268,12 +270,17 @@ export function AuthModal() {
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : authModalMode === "confirm-email" ? (
                     <>
-                      Complete Sign In
+                      Complete Login
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  ) : authModalMode === "signup" ? (
+                    <>
+                      Get Started
                       <ArrowRight className="w-4 h-4" />
                     </>
                   ) : (
                     <>
-                      Send Magic Link
+                      Log In
                       <ArrowRight className="w-4 h-4" />
                     </>
                   )}
@@ -282,9 +289,43 @@ export function AuthModal() {
 
               {/* Passwordless reassurance */}
               {authModalMode !== "confirm-email" && (
-                <p className="mt-5 text-center text-[11px] text-gray-400 dark:text-gray-500">
-                  No password required. We'll email you a secure, single-use link.
-                </p>
+                <>
+                  <p className="mt-4 text-center text-[11px] text-gray-400 dark:text-gray-500">
+                    We'll email you a secure login link. No password needed.
+                  </p>
+
+                  <div className="mt-5 pt-4 border-t border-gray-150 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
+                    {authModalMode === "signin" ? (
+                      <p>
+                        Don't have an account?{" "}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setError(null);
+                            openAuthModal("signup");
+                          }}
+                          className="text-[#00DDB3] font-semibold hover:underline"
+                        >
+                          Sign up
+                        </button>
+                      </p>
+                    ) : (
+                      <p>
+                        Already have an account?{" "}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setError(null);
+                            openAuthModal("signin");
+                          }}
+                          className="text-[#00DDB3] font-semibold hover:underline"
+                        >
+                          Log in
+                        </button>
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
             </div>
           )}

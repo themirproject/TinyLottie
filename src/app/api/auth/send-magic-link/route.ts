@@ -20,12 +20,9 @@ function getMagicLinkEmailHtml(magicLink: string, email: string): string {
         <table role="presentation" width="100%" style="max-width: 520px; background-color: #111827; border: 1px solid #1f2937; border-radius: 20px; padding: 40px 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
           <!-- Logo -->
           <tr>
-            <td align="center" style="padding-bottom: 24px;">
-              <div style="display: inline-block; background-color: #00DDB3; padding: 10px 14px; border-radius: 12px;">
-                <span style="font-size: 20px; font-weight: 800; color: #000000; letter-spacing: -0.5px;">TL</span>
-              </div>
-              <h1 style="margin: 16px 0 0 0; font-size: 22px; font-weight: 700; color: #ffffff; letter-spacing: -0.5px;">
-                TinyLottie
+            <td align="center" style="padding-bottom: 20px;">
+              <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
+                Tiny<span style="color: #00DDB3;">Lottie</span>
               </h1>
             </td>
           </tr>
@@ -34,10 +31,10 @@ function getMagicLinkEmailHtml(magicLink: string, email: string): string {
           <tr>
             <td style="padding-bottom: 28px; text-align: center;">
               <h2 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 600; color: #ffffff;">
-                Your Magic Sign-In Link
+                Your Sign-In Link
               </h2>
               <p style="margin: 0; font-size: 14px; line-height: 22px; color: #9ca3af;">
-                We received a sign-in request for <strong style="color: #ffffff;">${email}</strong>. Click the secure button below to log in to TinyLottie.
+                We received a sign-in request for <strong style="color: #ffffff;">${email}</strong>. Click the secure button below to log in to TinyLottie:
               </p>
             </td>
           </tr>
