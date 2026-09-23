@@ -93,9 +93,13 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Generate the secure magic link via Firebase Admin SDK
-    const origin =
-      process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "https://tinylottie.com");
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+    let origin = process.env.NEXT_PUBLIC_APP_URL || "https://tinylottie.com";
+    if (host.includes("localhost") || process.env.NODE_ENV === "development") {
+      origin = "http://localhost:3000";
+    } else {
+      origin = "https://tinylottie.com";
+    }
 
     const actionCodeSettings = {
       url: `${origin}/?magicLink=true`,
