@@ -11,30 +11,49 @@ function getMagicLinkEmailHtml(magicLink: string, email: string): string {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
   <title>Sign in to TinyLottie</title>
+  <style>
+    :root {
+      color-scheme: light;
+      supported-color-schemes: light;
+    }
+    body {
+      background-color: #f8fafc !important;
+      color: #0f172a !important;
+    }
+  </style>
 </head>
-<body style="margin: 0; padding: 0; background-color: #0b0f19; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #f3f4f6;">
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #0b0f19; padding: 40px 16px;">
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #0f172a;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 40px 16px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="100%" style="max-width: 520px; background-color: #111827; border: 1px solid #1f2937; border-radius: 20px; padding: 40px 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);">
-          <!-- Logo -->
+        <table role="presentation" width="100%" style="max-width: 500px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 24px; padding: 40px 32px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);">
+          <!-- Logo & Brand Header -->
           <tr>
-            <td align="center" style="padding-bottom: 20px;">
-              <h1 style="margin: 0; font-size: 26px; font-weight: 800; color: #ffffff; letter-spacing: -0.5px;">
-                Tiny<span style="color: #00DDB3;">Lottie</span>
-              </h1>
+            <td align="center" style="padding-bottom: 28px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
+                <tr>
+                  <td style="vertical-align: middle; padding-right: 10px;">
+                    <img src="https://tinylottie.com/logo-icon.png" width="36" height="36" alt="TinyLottie Logo" style="display: block; width: 36px; height: 36px; border-radius: 10px;" />
+                  </td>
+                  <td style="vertical-align: middle;">
+                    <span style="font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">TinyLottie</span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
           <!-- Message -->
           <tr>
             <td style="padding-bottom: 28px; text-align: center;">
-              <h2 style="margin: 0 0 10px 0; font-size: 20px; font-weight: 600; color: #ffffff;">
+              <h2 style="margin: 0 0 10px 0; font-size: 22px; font-weight: 700; color: #0f172a; letter-spacing: -0.3px;">
                 Your Sign-In Link
               </h2>
-              <p style="margin: 0; font-size: 14px; line-height: 22px; color: #9ca3af;">
-                We received a sign-in request for <strong style="color: #ffffff;">${email}</strong>. Click the secure button below to log in to TinyLottie:
+              <p style="margin: 0; font-size: 14px; line-height: 22px; color: #475569;">
+                We received a request to log in for <strong style="color: #0f172a;">${email}</strong>. Click the button below to sign in to TinyLottie:
               </p>
             </td>
           </tr>
@@ -42,32 +61,34 @@ function getMagicLinkEmailHtml(magicLink: string, email: string): string {
           <!-- CTA Button -->
           <tr>
             <td align="center" style="padding-bottom: 32px;">
-              <a href="${magicLink}" target="_blank" style="display: inline-block; background-color: #00DDB3; color: #000000; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 36px; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(0, 221, 179, 0.39);">
-                Sign In to TinyLottie &rarr;
+              <a href="${magicLink}" target="_blank" style="display: inline-block; background-color: #00DDB3; color: #000000; font-size: 15px; font-weight: 700; text-decoration: none; padding: 14px 38px; border-radius: 12px; box-shadow: 0 4px 14px 0 rgba(0, 221, 179, 0.35);">
+                Log In to TinyLottie &rarr;
               </a>
             </td>
           </tr>
 
-          <!-- Security Notice -->
+          <!-- Security Notice & Fallback -->
           <tr>
-            <td style="border-top: 1px solid #1f2937; padding-top: 24px; text-align: center;">
-              <p style="margin: 0 0 12px 0; font-size: 12px; line-height: 18px; color: #6b7280;">
-                Button not working? Copy and paste this link into your browser:
-              </p>
-              <p style="margin: 0 0 16px 0; font-size: 11px; word-break: break-all; color: #00DDB3; line-height: 16px;">
-                <a href="${magicLink}" style="color: #00DDB3; text-decoration: underline;">${magicLink}</a>
-              </p>
-              <p style="margin: 0; font-size: 11px; line-height: 16px; color: #6b7280;">
-                This link is valid for 1 hour and can only be used once. If you did not request this email, you can safely ignore it.
+            <td style="border-top: 1px solid #f1f5f9; padding-top: 24px; text-align: center;">
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; text-align: left;">
+                <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 600; color: #64748b;">
+                  Button not working? Copy and paste this link:
+                </p>
+                <p style="margin: 0; font-size: 11px; word-break: break-all; line-height: 16px;">
+                  <a href="${magicLink}" style="color: #00A685; text-decoration: underline;">${magicLink}</a>
+                </p>
+              </div>
+              <p style="margin: 0; font-size: 11px; line-height: 16px; color: #94a3b8;">
+                This link is valid for 1 hour and can only be used once. If you did not request this, you can safely ignore this email.
               </p>
             </td>
           </tr>
         </table>
 
         <!-- Footer -->
-        <table role="presentation" width="100%" style="max-width: 520px; margin-top: 24px;">
+        <table role="presentation" width="100%" style="max-width: 500px; margin-top: 20px;">
           <tr>
-            <td align="center" style="font-size: 12px; color: #4b5563;">
+            <td align="center" style="font-size: 12px; color: #94a3b8;">
               &copy; ${new Date().getFullYear()} TinyLottie. All rights reserved.
             </td>
           </tr>
