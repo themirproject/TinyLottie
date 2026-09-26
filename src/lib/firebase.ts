@@ -4,9 +4,14 @@ import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth"; // EKLENDİ
 import { getFirestore } from "firebase/firestore"; // EKLENDİ
 
+const isProductionDomain =
+  typeof window !== "undefined" &&
+  (window.location.hostname === "tinylottie.com" ||
+    window.location.hostname.endsWith(".tinylottie.com"));
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: "tinylottie-afbda.firebaseapp.com",
+  authDomain: isProductionDomain ? "tinylottie.com" : "tinylottie-afbda.firebaseapp.com",
   projectId: "tinylottie-afbda",
   storageBucket: "tinylottie-afbda.firebasestorage.app",
   messagingSenderId: "71470859311",
