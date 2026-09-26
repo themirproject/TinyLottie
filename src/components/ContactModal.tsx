@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Send, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 interface ContactModalProps {
@@ -20,22 +19,12 @@ const TOPICS = [
 ];
 
 export function ContactModal({ isOpen, onClose, defaultTopic = "general" }: ContactModalProps) {
-  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [topic, setTopic] = useState(defaultTopic);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
-  useEffect(() => {
-    if (user?.email) {
-      setEmail(user.email);
-    }
-    if (user?.displayName) {
-      setName(user.displayName);
-    }
-  }, [user]);
 
   useEffect(() => {
     if (defaultTopic) {
@@ -98,6 +87,8 @@ export function ContactModal({ isOpen, onClose, defaultTopic = "general" }: Cont
   const handleResetAndClose = () => {
     setSubmitted(false);
     setMessage("");
+    setEmail("");
+    setName("");
     onClose();
   };
 
@@ -212,7 +203,7 @@ export function ContactModal({ isOpen, onClose, defaultTopic = "general" }: Cont
                     </label>
                     <input
                       type="text"
-                      placeholder="Alex Doe"
+                      placeholder="Your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 text-sm focus:outline-none focus:ring-2 focus:ring-[#00DDB3] focus:border-transparent transition-all"
