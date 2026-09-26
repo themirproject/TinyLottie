@@ -94,6 +94,9 @@ export const metadata: Metadata = {
     },
   },
   category: 'technology',
+  verification: {
+    google: 'googled3fa8073ad49f808',
+  },
 };
 
 import { AuthProvider } from "@/contexts/AuthContext";
