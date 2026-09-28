@@ -611,11 +611,7 @@ function AppContent() {
                     </button>
                   </div>
                   <p className="mt-1 text-xs sm:text-sm text-amber-800/90 dark:text-amber-300/80 leading-relaxed">
-                    <span className="font-semibold text-amber-950 dark:text-amber-100">
-                      {rejectedFileNotice.fileName ? `"${rejectedFileNotice.fileName}"` : "The selected file"}
-                    </span>{" "}
-                    ({formatFileSize(rejectedFileNotice.fileSize)}) exceeds the{" "}
-                    <span className="font-semibold text-amber-950 dark:text-amber-100">3 MB Free limit</span> and was not uploaded or processed. Please choose a file under 3 MB, or upgrade to TinyLottie PRO to process files up to 50 MB.
+                    Your {formatFileSize(rejectedFileNotice.fileSize)} file exceeds the 3 MB Free limit. Choose a smaller file or upgrade to PRO (up to 50 MB).
                   </p>
                   <div className="mt-3 flex items-center gap-3">
                     <button

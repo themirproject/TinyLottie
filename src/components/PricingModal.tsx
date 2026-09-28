@@ -64,7 +64,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
   return (
     <div 
       onClick={handleClose}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}
@@ -72,10 +72,10 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ type: "spring", duration: 0.4 }}
-        className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-150 dark:border-gray-800"
+        className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-gray-150 dark:border-gray-800 max-h-[92vh] overflow-y-auto my-auto"
       >
         {/* Visual Premium Header */}
-        <div className="relative bg-slate-950 p-8 text-white overflow-hidden border-b border-gray-800">
+        <div className="relative bg-slate-950 p-6 sm:p-8 text-white overflow-hidden border-b border-gray-800">
           {/* Abstract Glowing shapes */}
           <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-[#00DDB3]/15 rounded-full blur-3xl" />
           <div className="absolute bottom-[-60px] left-[-30px] w-40 h-40 bg-[#00C9A7]/10 rounded-full blur-2xl" />
@@ -86,7 +86,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
           {/* Close button */}
           <button
             onClick={handleClose}
-            className="absolute top-5 right-5 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+            className="absolute top-4 right-4 sm:top-5 sm:right-5 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -95,8 +95,8 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
           {/* Header illustration layout */}
           <div className="flex items-center gap-4 relative z-10">
             {/* Visual Icon Illustration */}
-            <div className="relative shrink-0 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#00DDB3] to-[#00C9A7] flex items-center justify-center shadow-lg shadow-[#00DDB3]/20">
-              <Zap className="w-7 h-7 text-white fill-white/10" />
+            <div className="relative shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#00DDB3] to-[#00C9A7] flex items-center justify-center shadow-lg shadow-[#00DDB3]/20">
+              <Zap className="w-6 h-6 sm:w-7 sm:h-7 text-white fill-white/10" />
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
@@ -110,13 +110,13 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
               <span className="text-[10px] font-bold tracking-widest text-[#00DDB3] uppercase bg-[#00DDB3]/10 px-2.5 py-1 rounded-full border border-[#00DDB3]/20">
                 Limit Exceeded
               </span>
-              <h2 className="text-2xl font-extrabold tracking-tight mt-2 text-white">
+              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight mt-1.5 sm:mt-2 text-white">
                 Your file exceeds the free limit
               </h2>
             </div>
           </div>
 
-          <div className="mt-6 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4 relative z-10 backdrop-blur-sm">
+          <div className="mt-5 sm:mt-6 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-3.5 sm:p-4 relative z-10 backdrop-blur-sm">
             <FileJson className="w-5 h-5 text-[#00DDB3] shrink-0" />
             <p className="text-xs text-gray-300 leading-normal">
               Your uploaded file size is{" "}
@@ -130,63 +130,59 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6 sm:p-8 space-y-6">
+        <div className="p-6 sm:p-8 space-y-5 sm:space-y-6">
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-extrabold text-gray-900 dark:text-white">
+            <span className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">
               $99
             </span>
-            <span className="text-gray-500 dark:text-gray-400 font-semibold text-sm">
+            <span className="text-gray-500 dark:text-gray-400 font-semibold text-xs sm:text-sm">
               / lifetime access
             </span>
-            <span className="ml-auto text-[10px] font-bold text-[#00DDB3] bg-[#00DDB3]/10 px-3 py-1 rounded-full border border-[#00DDB3]/20 uppercase tracking-wider">
+            <span className="ml-auto text-[10px] font-bold text-[#00DDB3] bg-[#00DDB3]/10 px-2.5 sm:px-3 py-1 rounded-full border border-[#00DDB3]/20 uppercase tracking-wider">
               ONE-TIME PAYMENT
             </span>
           </div>
 
-          <p className="text-gray-600 dark:text-gray-400 font-medium text-sm leading-relaxed border-l-2 border-[#00DDB3] pl-3 py-0.5 bg-gray-50 dark:bg-gray-800/40 rounded-r-lg">
-            Optimize larger Lottie files directly in your browser with TinyLottie PRO.
-          </p>
-
           {/* Features */}
           <div className="space-y-4">
             <div className="flex items-start gap-3.5">
-              <div className="p-1 bg-[#00DDB3]/10 rounded-full mt-0.5">
+              <div className="p-1 bg-[#00DDB3]/10 rounded-full mt-0.5 shrink-0">
                 <Check className="w-4 h-4 text-[#00DDB3]" />
               </div>
               <div>
                 <h4 className="font-bold text-sm text-gray-900 dark:text-white">
-                  Up to 50 MB File Size
+                  Optimize Files up to 50 MB
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Process large animation assets beyond the 3 MB free limit
+                  Go beyond the 3 MB Free limit.
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-3.5">
-              <div className="p-1 bg-[#00DDB3]/10 rounded-full mt-0.5">
+              <div className="p-1 bg-[#00DDB3]/10 rounded-full mt-0.5 shrink-0">
                 <Check className="w-4 h-4 text-[#00DDB3]" />
               </div>
               <div>
                 <h4 className="font-bold text-sm text-gray-900 dark:text-white">
-                  100% Private Local Processing
+                  Lifetime Access
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  All optimization runs in your browser — files never leave your device
+                  One payment. No recurring fees.
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-3.5">
-              <div className="p-1 bg-[#00DDB3]/10 rounded-full mt-0.5">
+              <div className="p-1 bg-[#00DDB3]/10 rounded-full mt-0.5 shrink-0">
                 <Check className="w-4 h-4 text-[#00DDB3]" />
               </div>
               <div>
                 <h4 className="font-bold text-sm text-gray-900 dark:text-white">
-                  Lifetime License
+                  Private Browser-Based Processing
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  One-time purchase with no subscriptions or recurring fees
+                  Your animations stay on your device.
                 </p>
               </div>
             </div>
@@ -198,7 +194,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
               onClick={handleUpgrade}
               className="w-full bg-[#00DDB3] hover:bg-[#00C9A7] text-white h-12 text-base font-bold rounded-xl shadow-lg shadow-[#00DDB3]/20 transition-all hover:scale-[1.01]"
             >
-              Upgrade to Pro
+              Get Lifetime PRO — $99
             </Button>
             <button
               onClick={handleClose}
