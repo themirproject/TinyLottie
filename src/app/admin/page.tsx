@@ -34,14 +34,22 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import {
+  isAdminUser,
+  isInternalUser,
+  classifyUserActivity,
+  ActivitySegment,
+} from "@/lib/config/internal-accounts";
 
 interface UsageLog {
   id: string;
   userId: string;
-  fileName: string;
+  fileName?: string;
+  format?: string;
   originalSize: string;
   optimizedSize: string;
   compressionRatio: number;
+  status?: string;
   timestamp: any;
 }
 
@@ -76,7 +84,17 @@ function fmt(bytes: number): string {
   return `${bytes} B`;
 }
 
-const ADMIN_EMAILS = ["emir.kalayci@gmail.com", "kalayci.emir@gmail.com"];
+function formatLogName(log: UsageLog): string {
+  if (log.fileName) {
+    const ext = log.fileName.includes(".") ? log.fileName.split(".").pop() : "json";
+    const base = log.fileName.replace(/\.[^/.]+$/, "");
+    if (base.length > 20) {
+      return `${base.slice(0, 12)}…${base.slice(-4)}.${ext}`;
+    }
+    return log.fileName;
+  }
+  return `${(log.format || "json").toUpperCase()} animation`;
+}
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
@@ -88,6 +106,7 @@ export default function AdminPage() {
   const [fetchingLogs, setFetchingLogs] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "24h" | "7d" | "30d">("all");
+  const [activitySegment, setActivitySegment] = useState<ActivitySegment>("external");
   const [search, setSearch] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -98,7 +117,7 @@ export default function AdminPage() {
   const [userStatusFilter, setUserStatusFilter] = useState<"all" | "pro" | "free">("all");
   const [updatingUid, setUpdatingUid] = useState<string | null>(null);
 
-  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const isAdmin = user ? isAdminUser(user.uid) : false;
 
   // Fetch Usage Logs & Analytics (only when Analytics tab is active)
   useEffect(() => {
@@ -231,6 +250,13 @@ export default function AdminPage() {
   const filtered = useMemo(() => {
     let result = logs;
 
+    // Filter by activity segment
+    if (activitySegment === "external") {
+      result = result.filter((l) => !isInternalUser(l.userId));
+    } else if (activitySegment === "internal") {
+      result = result.filter((l) => isInternalUser(l.userId));
+    }
+
     if (filter !== "all") {
       const cutoff = new Date();
       if (filter === "24h") cutoff.setHours(cutoff.getHours() - 24);
@@ -247,12 +273,13 @@ export default function AdminPage() {
       result = result.filter(
         (l) =>
           l.fileName?.toLowerCase().includes(q) ||
+          l.format?.toLowerCase().includes(q) ||
           l.userId?.toLowerCase().includes(q)
       );
     }
 
     return result;
-  }, [logs, filter, search]);
+  }, [logs, filter, activitySegment, search]);
 
   const filteredEvents = useMemo(() => {
     let result = events;
@@ -298,7 +325,12 @@ export default function AdminPage() {
       0
     );
     const totalSaved = totalOriginal - totalOptimized;
-    const uniqueUsers = new Set(filtered.map((l) => l.userId)).size;
+    const uniqueUserIds = new Set(
+      filtered
+        .map((l) => l.userId)
+        .filter((uid) => uid && uid !== "unknown" && uid !== "anonim")
+    );
+    const uniqueUsers = uniqueUserIds.size;
     const avgRatio =
       filtered.length > 0
         ? Math.round(
@@ -311,6 +343,13 @@ export default function AdminPage() {
       0
     );
 
+    // 14-day daily chart respects activity segment for full 14-day context
+    const baseForChart = logs.filter((l) => {
+      if (activitySegment === "external") return !isInternalUser(l.userId);
+      if (activitySegment === "internal") return isInternalUser(l.userId);
+      return true;
+    });
+
     const days: Record<string, number> = {};
     const now = new Date();
     for (let i = 13; i >= 0; i--) {
@@ -318,7 +357,7 @@ export default function AdminPage() {
       d.setDate(d.getDate() - i);
       days[d.toLocaleDateString("en-US", { month: "short", day: "numeric" })] = 0;
     }
-    filtered.forEach((l) => {
+    baseForChart.forEach((l) => {
       const ts = l.timestamp?.toDate ? l.timestamp.toDate() : new Date(l.timestamp);
       const label = ts.toLocaleDateString("en-US", { month: "short", day: "numeric" });
       if (label in days) days[label]++;
@@ -333,7 +372,7 @@ export default function AdminPage() {
       .slice(0, 5);
 
     return { totalOriginal, totalOptimized, totalSaved, uniqueUsers, avgRatio, best, days, topSaved };
-  }, [filtered]);
+  }, [filtered, logs, activitySegment]);
 
   // Derived Users
   const filteredUsers = useMemo(() => {
@@ -682,14 +721,26 @@ export default function AdminPage() {
                 icon={<Zap className="w-5 h-5 text-[#00DDB3]" />}
                 label="Total Optimizations"
                 value={filtered.length.toLocaleString()}
-                sub={`all time: ${logs.length}`}
+                sub={
+                  activitySegment === "external"
+                    ? `external users (${filter === "all" ? "all time" : filter})`
+                    : activitySegment === "internal"
+                    ? `internal tests (${filter === "all" ? "all time" : filter})`
+                    : `all activity (${filter === "all" ? "all time" : filter})`
+                }
                 color="teal"
               />
               <KpiCard
                 icon={<Users className="w-5 h-5 text-blue-500" />}
-                label="Unique Users"
+                label="Unique Logged-In Users"
                 value={stats.uniqueUsers.toLocaleString()}
-                sub="logged-in only"
+                sub={
+                  activitySegment === "external"
+                    ? "verified external accounts"
+                    : activitySegment === "internal"
+                    ? "internal test accounts"
+                    : "all accounts"
+                }
                 color="blue"
               />
               <KpiCard
@@ -712,30 +763,42 @@ export default function AdminPage() {
             <div className="grid lg:grid-cols-3 gap-4">
               {/* Activity Chart — last 14 days */}
               <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-semibold text-gray-900 dark:text-white text-sm">
-                    Optimizations — Last 14 Days
-                  </h2>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Daily Optimizations — Last 14 Days
+                    </h2>
+                    <p className="text-[11px] text-gray-400 mt-0.5">
+                      {activitySegment === "external" ? "External user volume" : activitySegment === "internal" ? "Internal testing volume" : "All traffic volume"} · Peak: {maxDay} opt/day
+                    </p>
+                  </div>
                   <Clock className="w-4 h-4 text-gray-400" />
                 </div>
-                <div className="flex items-end gap-1.5 h-28">
-                  {Object.entries(stats.days).map(([label, count]) => (
-                    <div key={label} className="flex-1 flex flex-col items-center gap-1 group">
-                      <div
-                        className="w-full rounded-t-sm bg-[#00DDB3]/30 group-hover:bg-[#00DDB3]/60 transition-colors relative"
-                        style={{ height: `${(count / maxDay) * 100}%`, minHeight: count > 0 ? "4px" : "2px" }}
-                      >
-                        {count > 0 && (
-                          <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#00DDB3] opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {count}
-                          </span>
-                        )}
+                <div className="flex items-end gap-1.5 h-32 pt-4">
+                  {Object.entries(stats.days).map(([label, count]) => {
+                    const barHeightPct = count > 0 ? Math.max(14, Math.round((count / maxDay) * 100)) : 2;
+                    return (
+                      <div key={label} className="flex-1 flex flex-col items-center gap-1 group">
+                        <div
+                          className={`w-full rounded-t-sm transition-all relative ${
+                            count > 0
+                              ? "bg-[#00DDB3]/60 group-hover:bg-[#00DDB3]"
+                              : "bg-gray-100 dark:bg-gray-800"
+                          }`}
+                          style={{ height: `${barHeightPct}%`, minHeight: count > 0 ? "8px" : "2px" }}
+                        >
+                          {count > 0 && (
+                            <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#00DDB3] opacity-80 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                              {count}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[9px] text-gray-400 rotate-45 origin-left mt-1 hidden sm:block">
+                          {label}
+                        </span>
                       </div>
-                      <span className="text-[9px] text-gray-400 rotate-45 origin-left mt-1 hidden sm:block">
-                        {label}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -753,7 +816,7 @@ export default function AdminPage() {
                         <span className="text-xs font-bold text-gray-400 w-4">#{i + 1}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                            {l.fileName || "unknown"}
+                            {formatLogName(l)}
                           </p>
                           <p className="text-[10px] text-gray-500">
                             saved {fmt(l.savedBytes)}
@@ -769,21 +832,30 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* GA4 Event Summary Panel */}
+            {/* Event Telemetry Summary Panel */}
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-orange-500" />
-                  <h2 className="font-semibold text-gray-900 dark:text-white text-sm">GA4 Event Tracking</h2>
-                  <span className="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-semibold rounded-full">Live</span>
+              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-orange-500" />
+                    <h2 className="font-semibold text-gray-900 dark:text-white text-sm">
+                      Event Telemetry (Firestore Client Events)
+                    </h2>
+                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-semibold rounded-full">
+                      Rolling Buffer (Last 200 events)
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Direct client event logs from Firestore. Cross-reference with Google Analytics 4 for external visitor attribution.
+                  </p>
                 </div>
                 <a
                   href="https://analytics.google.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-[#00DDB3] hover:underline flex items-center gap-1"
+                  className="text-xs text-[#00DDB3] hover:underline flex items-center gap-1 font-medium"
                 >
-                  Open GA4 <ArrowUpRight className="w-3 h-3" />
+                  Open GA4 Console <ArrowUpRight className="w-3 h-3" />
                 </a>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -817,7 +889,31 @@ export default function AdminPage() {
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
               {/* Toolbar */}
               <div className="flex items-center justify-between flex-wrap gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center flex-wrap gap-2">
+                  {/* Activity Segment Switcher */}
+                  <div className="flex items-center bg-gray-100 dark:bg-gray-800 p-0.5 rounded-lg mr-2">
+                    {(
+                      [
+                        { id: "all", label: "All Activity" },
+                        { id: "external", label: "External Activity" },
+                        { id: "internal", label: "Internal / Test" },
+                      ] as const
+                    ).map((seg) => (
+                      <button
+                        key={seg.id}
+                        onClick={() => setActivitySegment(seg.id)}
+                        className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all ${
+                          activitySegment === seg.id
+                            ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-xs"
+                            : "text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                        }`}
+                      >
+                        {seg.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Time Range Filter */}
                   {(["all", "24h", "7d", "30d"] as const).map((f) => (
                     <button
                       key={f}
@@ -847,11 +943,11 @@ export default function AdminPage() {
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">File Name</th>
+                      <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">File / Format</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Original</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Optimized</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Saved</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User ID</th>
+                      <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User ID & Type</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
@@ -873,10 +969,10 @@ export default function AdminPage() {
                                 ? new Date(log.timestamp).toLocaleString()
                                 : "N/A"}
                             </td>
-                            <td className="px-6 py-3.5 text-sm text-gray-900 dark:text-white max-w-[180px] truncate" title={log.fileName}>
+                            <td className="px-6 py-3.5 text-sm text-gray-900 dark:text-white max-w-[200px] truncate" title={log.fileName || log.format || "Animation"}>
                               <span className="flex items-center gap-1.5">
-                                <FileJson className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-                                {log.fileName || "Unknown"}
+                                <FileJson className="w-3.5 h-3.5 text-[#00DDB3] flex-shrink-0" />
+                                {formatLogName(log)}
                               </span>
                             </td>
                             <td className="px-6 py-3.5 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
@@ -895,8 +991,27 @@ export default function AdminPage() {
                                 </span>
                               </div>
                             </td>
-                            <td className="px-6 py-3.5 whitespace-nowrap text-xs text-gray-400 font-mono">
-                              {log.userId?.slice(0, 10)}…
+                            <td className="px-6 py-3.5 whitespace-nowrap text-xs font-mono">
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-500">
+                                  {log.userId && log.userId !== "unknown"
+                                    ? `${log.userId.slice(0, 6)}…${log.userId.slice(-4)}`
+                                    : "unknown"}
+                                </span>
+                                {isInternalUser(log.userId) ? (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                                    Test
+                                  </span>
+                                ) : log.userId && log.userId !== "unknown" ? (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                                    External
+                                  </span>
+                                ) : (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-500 dark:bg-gray-800">
+                                    Unknown
+                                  </span>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );

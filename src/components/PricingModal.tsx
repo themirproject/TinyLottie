@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
 import { X, Zap, Check, Sparkles, FileJson } from "lucide-react";
 import { Button } from "./ui/button";
 import { trackPaywallUpgradeClick, trackPaywallDismissed } from "@/lib/analytics";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PricingModalProps {
   isOpen: boolean;
@@ -12,10 +14,30 @@ interface PricingModalProps {
 }
 
 export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
+  const { user } = useAuth();
+  const upgradedRef = useRef(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      upgradedRef.current = false;
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
+    if (!bytes || bytes === 0) return "0 Bytes";
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
@@ -23,15 +45,19 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
   };
 
   const handleUpgrade = () => {
+    upgradedRef.current = true;
     trackPaywallUpgradeClick("modal");
-    window.open(
-      "https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8",
-      "_blank"
-    );
+    const checkoutUrl = user?.email
+      ? `https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8?checkout[email]=${encodeURIComponent(user.email)}`
+      : "https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8";
+    window.open(checkoutUrl, "_blank");
+    onClose();
   };
 
   const handleClose = () => {
-    trackPaywallDismissed();
+    if (!upgradedRef.current) {
+      trackPaywallDismissed();
+    }
     onClose();
   };
 
@@ -61,6 +87,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
           <button
             onClick={handleClose}
             className="absolute top-5 right-5 p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
@@ -84,20 +111,20 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
                 Limit Exceeded
               </span>
               <h2 className="text-2xl font-extrabold tracking-tight mt-2 text-white">
-                Upgrade to Pro
+                Your file exceeds the free limit
               </h2>
             </div>
           </div>
 
           <div className="mt-6 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-4 relative z-10 backdrop-blur-sm">
-            <FileJson className="w-5 h-5 text-gray-400 shrink-0" />
+            <FileJson className="w-5 h-5 text-[#00DDB3] shrink-0" />
             <p className="text-xs text-gray-300 leading-normal">
               Your uploaded file size is{" "}
               <strong className="text-white font-bold">
-                {formatFileSize(fileSize)}
+                {fileSize && fileSize > 0 ? formatFileSize(fileSize) : "over 3 MB"}
               </strong>
               , which exceeds the free tier limit of{" "}
-              <strong className="text-[#00DDB3]">3 MB</strong>.
+              <strong className="text-[#00DDB3] font-bold">3 MB</strong>.
             </p>
           </div>
         </div>
@@ -117,9 +144,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
           </div>
 
           <p className="text-gray-600 dark:text-gray-400 font-medium text-sm leading-relaxed border-l-2 border-[#00DDB3] pl-3 py-0.5 bg-gray-50 dark:bg-gray-800/40 rounded-r-lg">
-            You are trying to optimize a large file. TinyLottie reduces files by
-            up to 85% on average. Upgrade to Pro to process files up to 50MB
-            instantly.
+            Optimize larger Lottie files directly in your browser with TinyLottie PRO.
           </p>
 
           {/* Features */}
@@ -133,7 +158,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
                   Up to 50 MB File Size
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Process large animation assets without restrictions
+                  Process large animation assets beyond the 3 MB free limit
                 </p>
               </div>
             </div>
@@ -144,10 +169,10 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
               </div>
               <div>
                 <h4 className="font-bold text-sm text-gray-900 dark:text-white">
-                  Priority Support &amp; Speed
+                  100% Private Local Processing
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Faster in-browser conversions with priority client-side parsing
+                  All optimization runs in your browser — files never leave your device
                 </p>
               </div>
             </div>
@@ -158,10 +183,10 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
               </div>
               <div>
                 <h4 className="font-bold text-sm text-gray-900 dark:text-white">
-                  Early Access to Pro Tools
+                  Lifetime License
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Get full upcoming access to Figma plugin integration &amp; batch optimization
+                  One-time purchase with no subscriptions or recurring fees
                 </p>
               </div>
             </div>
@@ -177,7 +202,7 @@ export function PricingModal({ isOpen, onClose, fileSize }: PricingModalProps) {
             </Button>
             <button
               onClick={handleClose}
-              className="w-full text-xs text-gray-500 dark:text-gray-400 hover:text-gray-850 dark:hover:text-white font-semibold transition-colors py-2 text-center"
+              className="w-full text-xs text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-white font-semibold transition-colors py-2 text-center"
             >
               Maybe later, keep free tier
             </button>

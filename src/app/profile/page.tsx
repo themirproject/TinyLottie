@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { trackPaywallUpgradeClick } from "@/lib/analytics";
 
 function LogoutScreen({ countdown, setCountdown, router }: { countdown: number; setCountdown: (n: number) => void; router: any }) {
   useEffect(() => {
@@ -240,6 +241,7 @@ export default function ProfilePage() {
                         href="https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8"
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => trackPaywallUpgradeClick("pricing_section")}
                         className="flex items-center justify-center h-11 w-full px-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-lg text-sm font-semibold transition-transform hover:scale-[1.02]"
                       >
                         Upgrade to Pro

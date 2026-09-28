@@ -9,6 +9,7 @@ export function AuthModal() {
   const {
     isAuthModalOpen,
     authModalMode,
+    openAuthModal,
     closeAuthModal,
     loginWithGoogle,
     sendMagicLink,

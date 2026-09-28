@@ -21,21 +21,32 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Helper: Check if user is an authorized admin
+    function isAdmin() {
+      return isAuth() && (
+        request.auth.uid in ['Py3GTwTWhLbY1bVHmVLtoqjYDdP2', 'HYgHmkE0OqOqrAZD2q6N2KZEA7m1'] ||
+        (request.auth.token.email != null && (
+          request.auth.token.email.lower() == 'emir.kalayci@gmail.com' ||
+          request.auth.token.email.lower() == 'kalayci.emir@gmail.com'
+        ))
+      );
+    }
+
     // 3. Usage Logs collection
     // - Authenticated users can log their own compressions
-    // - Anyone can read logs so the public landing page Live Results section can display recent optimizations
+    // - Only authorized admins can read raw optimization logs (protects privacy & metrics)
     match /usage_logs/{logId} {
       allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
-      allow read: if true; // Open to read (public optimization history dashboard)
+      allow read: if isAdmin();
       allow update, delete: if false;
     }
 
     // 4. Analytics Events collection
     // - Anyone can log anonymous client-side events
-    // - Only authenticated admins read events (front-end enforces admin email filter)
+    // - Only authorized administrators can read analytics events
     match /analytics_events/{eventId} {
       allow create: if true; // Open to write events
-      allow read: if isAuth();
+      allow read: if isAdmin();
       allow update, delete: if false;
     }
   }

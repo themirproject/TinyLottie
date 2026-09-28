@@ -6,6 +6,8 @@ import { db } from "@/lib/firebase";
 import { motion } from "motion/react";
 import { FileJson, Sparkles, ArrowRight } from "lucide-react";
 
+import { isInternalUser } from "@/lib/config/internal-accounts";
+
 interface OptimizationLog {
   id: string;
   fileName: string;
@@ -17,7 +19,7 @@ interface OptimizationLog {
 
 const realPreseededResults: OptimizationLog[] = [
   { id: "real-1", fileName: "Bald Eagle JSON.json", originalSize: "24.06 MB", optimizedSize: "4.36 MB", compressionRatio: 82, userId: "iYpYv1T0aK9xT3b5" },
-  { id: "real-2", fileName: "250 Yrs of Freedom JSON.json", originalSize: "44.44 MB", optimizedSize: "6.07 MB", compressionRatio: 86, userId: "Py3GTwTWwP3kG5h1" },
+  { id: "real-2", fileName: "250 Yrs of Freedom JSON.json", originalSize: "44.44 MB", optimizedSize: "6.07 MB", compressionRatio: 86, userId: "u7B3vK9xP2mQ4w8" },
   { id: "real-3", fileName: "Sparkler JSON.json", originalSize: "10.65 MB", optimizedSize: "5.08 MB", compressionRatio: 52, userId: "XMQnz9t4mR2vZ4p8" },
   { id: "real-4", fileName: "Happy 4th JSON.json", originalSize: "39.78 MB", optimizedSize: "5.59 MB", compressionRatio: 86, userId: "kL7wN9c3vN4cW8z7" },
   { id: "real-5", fileName: "Epic 4th of July JSON.json", originalSize: "37.53 MB", optimizedSize: "5.82 MB", compressionRatio: 84, userId: "xQ8zP4m1jT5vB9r2" },
@@ -70,6 +72,10 @@ export function LiveResults() {
 
         // 1. Add database logs first (showing real, recent, high-performance live optimizations)
         for (const log of dbLogs) {
+          if (isInternalUser(log.userId)) {
+            continue; // Exclude internal/test accounts from public growth metrics
+          }
+
           if (log.compressionRatio >= 40) {
             const normalizedName = log.fileName.toLowerCase().trim();
             const normalizedUser = log.userId.toLowerCase().trim();

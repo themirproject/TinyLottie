@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminAuth, adminDb } from "@/lib/firebase-admin";
+import {
+  isInternalUser,
+  ProOriginType,
+} from "@/lib/config/internal-accounts";
 
 const ADMIN_EMAILS = ["emir.kalayci@gmail.com", "kalayci.emir@gmail.com"];
 
@@ -20,7 +24,7 @@ async function verifyAdmin(req: NextRequest) {
   }
 }
 
-// GET: List all users with their PRO status
+// GET: List all users with their PRO status and entitlement origin
 export async function GET(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) {
@@ -37,12 +41,48 @@ export async function GET(req: NextRequest) {
 
     // 2. Fetch Firestore users collection
     const usersSnap = await db.collection("users").get();
-    const proMap = new Map<string, { isPro: boolean; email?: string }>();
+    const proMap = new Map<
+      string,
+      {
+        isPro: boolean;
+        email?: string;
+        proOrigin?: ProOriginType;
+        proOriginNotes?: string;
+        proOriginVerifiedAt?: string;
+        proOriginVerifiedBy?: string;
+        lemonSqueezyOrderId?: string;
+      }
+    >();
+
     usersSnap.forEach((doc) => {
       const data = doc.data();
+      const isPro = data.isPro === true;
+      let proOrigin: ProOriginType | undefined = data.proOrigin;
+
+      // Default fallback if not yet manually classified in Firestore:
+      if (isPro && !proOrigin) {
+        if (isInternalUser(doc.id)) {
+          proOrigin = "internal_test";
+        } else if (
+          data.lemonSqueezyOrderId &&
+          data.proActivationSource?.startsWith("lemonsqueezy") &&
+          data.lemonSqueezyOrderId !== "test_order_live_001"
+        ) {
+          proOrigin = "automated_sale";
+        } else {
+          // Do not infer payment or complimentary automatically
+          proOrigin = "unknown";
+        }
+      }
+
       proMap.set(doc.id, {
-        isPro: data.isPro === true,
+        isPro,
         email: data.email,
+        proOrigin,
+        proOriginNotes: data.proOriginNotes,
+        proOriginVerifiedAt: data.proOriginVerifiedAt,
+        proOriginVerifiedBy: data.proOriginVerifiedBy,
+        lemonSqueezyOrderId: data.lemonSqueezyOrderId,
       });
     });
 
@@ -54,6 +94,11 @@ export async function GET(req: NextRequest) {
         displayName: u.displayName || "",
         photoURL: u.photoURL || "",
         isPro: firestoreData ? firestoreData.isPro : false,
+        proOrigin: firestoreData?.proOrigin,
+        proOriginNotes: firestoreData?.proOriginNotes || "",
+        proOriginVerifiedAt: firestoreData?.proOriginVerifiedAt || "",
+        proOriginVerifiedBy: firestoreData?.proOriginVerifiedBy || "",
+        lemonSqueezyOrderId: firestoreData?.lemonSqueezyOrderId || "",
         createdAt: u.metadata.creationTime || "",
         lastSignInTime: u.metadata.lastSignInTime || "",
       };
@@ -75,7 +120,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// POST: Toggle PRO status for a user
+// POST: Toggle PRO status OR classify entitlement origin
 export async function POST(req: NextRequest) {
   const admin = await verifyAdmin(req);
   if (!admin) {
@@ -84,11 +129,11 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { uid, isPro } = body;
+    const { uid, isPro, proOrigin, notes } = body;
 
-    if (!uid || typeof isPro !== "boolean") {
+    if (!uid) {
       return NextResponse.json(
-        { error: "uid and isPro (boolean) are required." },
+        { error: "uid is required." },
         { status: 400 }
       );
     }
@@ -96,24 +141,73 @@ export async function POST(req: NextRequest) {
     const db = adminDb();
     const userRef = db.collection("users").doc(uid);
 
-    await userRef.set(
-      {
-        isPro,
-        updatedAt: new Date().toISOString(),
-        updatedBy: admin.email,
-      },
-      { merge: true }
-    );
+    // Operation A: Update Entitlement Origin classification (Safe classification mechanism)
+    if (proOrigin) {
+      const allowedOrigins: ProOriginType[] = [
+        "historical_manual_sale",
+        "automated_sale",
+        "complimentary_grant",
+        "internal_test",
+        "unknown",
+      ];
 
-    console.log(
-      `[admin-users-api] User ${uid} PRO status updated to ${isPro} by ${admin.email}`
-    );
+      if (!allowedOrigins.includes(proOrigin)) {
+        return NextResponse.json(
+          {
+            error: `Invalid proOrigin. Must be one of: ${allowedOrigins.join(", ")}`,
+          },
+          { status: 400 }
+        );
+      }
 
-    return NextResponse.json({ success: true, uid, isPro });
+      await userRef.set(
+        {
+          proOrigin,
+          proOriginNotes: typeof notes === "string" ? notes.trim() : "",
+          proOriginVerifiedAt: new Date().toISOString(),
+          proOriginVerifiedBy: admin.email || admin.uid,
+        },
+        { merge: true }
+      );
+
+      console.log(
+        `[admin-users-api] User ${uid} PRO origin updated to '${proOrigin}' by ${admin.email}`
+      );
+
+      return NextResponse.json({
+        success: true,
+        uid,
+        proOrigin,
+        proOriginNotes: notes || "",
+      });
+    }
+
+    // Operation B: Toggle PRO status
+    if (typeof isPro === "boolean") {
+      await userRef.set(
+        {
+          isPro,
+          updatedAt: new Date().toISOString(),
+          updatedBy: admin.email,
+        },
+        { merge: true }
+      );
+
+      console.log(
+        `[admin-users-api] User ${uid} PRO status updated to ${isPro} by ${admin.email}`
+      );
+
+      return NextResponse.json({ success: true, uid, isPro });
+    }
+
+    return NextResponse.json(
+      { error: "Either isPro (boolean) or proOrigin (string) must be provided." },
+      { status: 400 }
+    );
   } catch (err: any) {
     console.error("[admin-users-api] POST error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to update PRO status" },
+      { error: err.message || "Failed to update user" },
       { status: 500 }
     );
   }

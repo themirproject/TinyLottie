@@ -18,10 +18,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL('https://tinylottie.com'),
   title: {
-    default: "TinyLottie | Free Lottie & dotLottie Optimizer — Compress up to 98%",
+    default: "TinyLottie | Free Lottie Compressor & Optimizer — Reduce File Size up to 98%",
     template: "%s | TinyLottie"
   },
-  description: "Free browser-based Lottie JSON and dotLottie optimizer. Compress Lottie animations up to 98% instantly — no uploads, 100% private. Works with After Effects, Figma, Webflow, React Native, and Next.js.",
+  description: "Free browser-based Lottie compressor and dotLottie optimizer. Reduce Lottie JSON file size up to 98% instantly — zero uploads, 100% private. Works with After Effects, Figma, Webflow, React Native, and Next.js.",
   keywords: [
     "Lottie optimizer",
     "Compress Lottie files",

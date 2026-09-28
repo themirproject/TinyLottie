@@ -24,6 +24,7 @@ import { Toaster } from "@/components/ui/sonner";
 import {
   trackFileLoaded,
   trackPaywallHit,
+  trackPaywallUpgradeClick,
   trackPaywallDismissed,
   trackOptimizationComplete,
   trackOptimizationError,
@@ -51,6 +52,7 @@ import {
   Lightbulb,
   Check,
   X,
+  AlertCircle,
 } from "lucide-react";
 import tipsData from "../../tips.json";
 
@@ -75,9 +77,14 @@ function AppContent() {
   const [showContactModal, setShowContactModal] =
     useState(false);
   const [largeFileSize, setLargeFileSize] = useState(0);
+  const [rejectedFileNotice, setRejectedFileNotice] = useState<{
+    fileName: string;
+    fileSize: number;
+  } | null>(null);
   const [currentTip, setCurrentTip] = useState("");
 
   const FILE_SIZE_LIMIT = 3 * 1024 * 1024; // 3MB in bytes
+  const PRO_FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB in bytes
 
   // Set dynamic favicon
   useEffect(() => {
@@ -126,12 +133,22 @@ function AppContent() {
   };
 
   const handleFileSelect = async (file: File) => {
-    // Check file size limit and enforce PRO bounds
+    // Check file size limits
+    if (isPro && file.size > PRO_FILE_SIZE_LIMIT) {
+      toast.error(`File size (${formatFileSize(file.size)}) exceeds the 50 MB Pro limit.`);
+      return;
+    }
+
+    // Check free limit and trigger paywall for non-PRO users
     if (file.size > FILE_SIZE_LIMIT && !isPro) {
       setLargeFileSize(file.size);
+      setRejectedFileNotice({
+        fileName: file.name,
+        fileSize: file.size,
+      });
       setShowPricingModal(true);
       toast.error(
-        `File size exceeds 3MB limit. Upgrade to Pro for unlimited file sizes.`,
+        `File size exceeds 3 MB Free limit. Upgrade to Pro to process files up to 50 MB.`,
       );
       // 🔥 Track paywall hit
       trackPaywallHit({
@@ -144,6 +161,8 @@ function AppContent() {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
+      setRejectedFileNotice(null);
+      setLargeFileSize(0);
       setLottieData({
         file,
         data,
@@ -293,17 +312,21 @@ function AppContent() {
       const randomTip = tipsData[Math.floor(Math.random() * tipsData.length)].text;
       setCurrentTip(randomTip);
 
-      // Log optimization to database if user is logged in
+      // Log optimization to database if user is logged in (privacy-first: no raw file names stored)
       if (user) {
         try {
           const ratio = Math.round(((originalBytes - finalOptimizedBytes) / originalBytes) * 100);
+          const detectedFormat = outputFormat || (lottieData.file.name.toLowerCase().endsWith(".lottie") ? "lottie" : "json");
 
           await addDoc(collection(db, "usage_logs"), {
             userId: user.uid,
-            fileName: lottieData.file.name,
+            format: detectedFormat,
             originalSize: formatFileSize(originalBytes),
             optimizedSize: formatFileSize(finalOptimizedBytes),
+            originalSizeBytes: originalBytes,
+            optimizedSizeBytes: finalOptimizedBytes,
             compressionRatio: ratio,
+            status: "success",
             timestamp: serverTimestamp()
           });
         } catch (logError) {
@@ -362,7 +385,7 @@ function AppContent() {
       };
 
       const zippedBytes = zipSync(zipData);
-      const blob = new Blob([zippedBytes.buffer], { type: 'application/zip' });
+      const blob = new Blob([zippedBytes.buffer as ArrayBuffer], { type: 'application/zip' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -400,6 +423,8 @@ function AppContent() {
 
   const handleReset = () => {
     setLottieData(null);
+    setRejectedFileNotice(null);
+    setLargeFileSize(0);
   };
 
   const features = [
@@ -463,9 +488,9 @@ function AppContent() {
               <div className="p-2 bg-[#00DDB3] rounded-lg">
                 <FileJson className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
                 TinyLottie
-              </h1>
+              </span>
             </motion.div>
 
             {/* Desktop Navigation Links */}
@@ -554,13 +579,55 @@ function AppContent() {
                 </span>
               </h1>
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed px-4">
-                Shrink After Effects JSON and dotLottie animation file sizes{" "}
+                Free browser-based <span className="font-semibold text-gray-900 dark:text-white">Lottie compressor</span> and dotLottie optimizer. Reduce animation JSON file size{" "}
                 <span className="font-semibold text-[#00DDB3]">
                   up to 98%
                 </span>{" "}
-                while preserving every frame. The ultimate Bodymovin optimizer with zero uploads and 100% privacy.
+                instantly with zero uploads and 100% offline privacy.
               </p>
             </motion.div>
+
+            {/* Limit Exceeded Notice if modal was dismissed or oversized file was selected */}
+            {rejectedFileNotice && !lottieData && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3.5 text-amber-900 dark:text-amber-200 shadow-sm"
+              >
+                <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-xl shrink-0">
+                  <AlertCircle className="w-5 h-5 text-amber-700 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-bold text-amber-900 dark:text-amber-200">
+                      File not optimized — Free limit exceeded
+                    </h4>
+                    <button
+                      onClick={() => setRejectedFileNotice(null)}
+                      className="text-amber-500 hover:text-amber-800 dark:hover:text-amber-200 p-1 rounded-lg transition-colors"
+                      aria-label="Dismiss notice"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="mt-1 text-xs sm:text-sm text-amber-800/90 dark:text-amber-300/80 leading-relaxed">
+                    <span className="font-semibold text-amber-950 dark:text-amber-100">
+                      {rejectedFileNotice.fileName ? `"${rejectedFileNotice.fileName}"` : "The selected file"}
+                    </span>{" "}
+                    ({formatFileSize(rejectedFileNotice.fileSize)}) exceeds the{" "}
+                    <span className="font-semibold text-amber-950 dark:text-amber-100">3 MB Free limit</span> and was not uploaded or processed. Please choose a file under 3 MB, or upgrade to TinyLottie PRO to process files up to 50 MB.
+                  </p>
+                  <div className="mt-3 flex items-center gap-3">
+                    <button
+                      onClick={() => setShowPricingModal(true)}
+                      className="text-xs font-bold text-amber-900 dark:text-amber-100 underline underline-offset-2 hover:opacity-80 transition-opacity"
+                    >
+                      View PRO features →
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Drag & Drop - Primary CTA */}
             <motion.div
@@ -772,6 +839,7 @@ function AppContent() {
                     href="https://tiny-lottie.lemonsqueezy.com/checkout/buy/c070366c-2fb4-41bf-ad9a-4af0cc94fab8"
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackPaywallUpgradeClick("pricing_section")}
                     className="flex items-center justify-center w-full h-12 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-all transform hover:scale-[1.02]"
                   >
                     Upgrade to Pro
