@@ -451,6 +451,7 @@ export default function AdminPage() {
     let nativeShareCancelled = 0;
 
     filteredEvents.forEach((e: any) => {
+      if (e.userId && isInternalUser(e.userId)) return;
       if (e.event === "optimization_result_shared") {
         if (e.action === "download_png") pngDownloaded++;
         else if (e.action === "copy_caption") captionCopied++;
@@ -1404,7 +1405,7 @@ export default function AdminPage() {
                       Share & Distribution Actions
                     </h4>
                     <p className="text-[11px] text-gray-500">
-                      User-initiated export and share actions (Local exports & share sheets — not confirmed published posts)
+                      User-initiated export and share actions (Local exports & share sheets · Internal test accounts excluded · Not confirmed published posts)
                     </p>
                   </div>
                 </div>

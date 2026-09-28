@@ -368,13 +368,13 @@ export function GrowthInsightsView({
       if (optimizations.pctChange > 0) {
         list.push({
           id: "opt-increase",
-          category: "Usage Growth",
+          category: "Usage Trend",
           title: "Increased Optimization Activity",
-          observation: `Successful optimizations grew by ${optimizations.pctChange}% (${optimizations.prior} → ${optimizations.current}) week-over-week.`,
+          observation: `Successful optimizations grew by ${optimizations.pctChange}% (${optimizations.prior} → ${optimizations.current}) week-over-week (UTC).`,
           possibleExplanation:
-            "Improved organic search rank on '/lottie-compressor' or returning users utilizing the tool.",
+            "Increased tool activity observed across registered and anonymous sessions. Possible factors include returning visitors, direct referral traffic, or search impression fluctuations (requires Search Console verification).",
           recommendation:
-            "Inspect Search Console for newly indexed keywords and maintain existing page performance.",
+            "Check Google Search Console impressions and queries for '/lottie-compressor' to verify whether organic search traffic drove this volume before concluding SEO growth.",
           tone: "teal",
           isLowSample: false,
         });
@@ -385,9 +385,9 @@ export function GrowthInsightsView({
           title: "Softening Optimization Volume",
           observation: `Weekly optimizations contracted by ${Math.abs(
             optimizations.pctChange
-          )}% (${optimizations.prior} → ${optimizations.current}).`,
+          )}% (${optimizations.prior} → ${optimizations.current}) week-over-week (UTC).`,
           possibleExplanation:
-            "Potential variation in search impression volume or weekly seasonality.",
+            "Potential variation in search impression volume, seasonal demand, or tool drop-off.",
           recommendation:
             "Check Google Search Console impression trends and test the homepage upload area to ensure zero drag-and-drop friction.",
           tone: "amber",
@@ -399,7 +399,7 @@ export function GrowthInsightsView({
         id: "low-sample-volume",
         category: "Sample Size Context",
         title: "Early-Stage Activity Volume",
-        observation: `${optimizations.current} successful optimizations were completed in the current 7-day period (vs ${optimizations.prior} in the prior week).`,
+        observation: `${optimizations.current} successful optimizations were completed in the current 7-day UTC period (vs ${optimizations.prior} in the prior week).`,
         possibleExplanation:
           "With early organic traffic, weekly totals have naturally high percentage volatility.",
         recommendation:
@@ -415,11 +415,11 @@ export function GrowthInsightsView({
         id: "paywall-no-click",
         category: "Monetization Friction",
         title: "Paywall Viewed Without Upgrade Clicks",
-        observation: `${paywallHits.current} paywall hit(s) occurred this week, but 0 users clicked the $99 Lifetime PRO upgrade button.`,
+        observation: `${paywallHits.current} paywall hit(s) occurred this week (UTC), but 0 users clicked the $99 Lifetime PRO upgrade button.`,
         possibleExplanation:
-          "Users encountering the 3 MB limit may consider $99 steep for a one-off compression, or the modal copy may not sufficiently emphasize lifetime unlimited 50 MB access.",
+          "Users encountered the 3 MB limit without clicking upgrade. Possible factors include: immediate one-off compression needs where a workaround was chosen, hesitation regarding the pricing tier, or modal copy not sufficiently highlighting the 50 MB allowance and lifetime value.",
         recommendation:
-          "Review PRO modal messaging to ensure the 50 MB allowance and $99 one-time lifetime value proposition are crystal clear.",
+          "Review the paywall modal presentation, ensure the 50 MB limit and lifetime value proposition are clear, and monitor whether hit volume increases before considering pricing changes.",
         tone: "amber",
         isLowSample: paywallHits.isLowSample,
       });
@@ -430,7 +430,7 @@ export function GrowthInsightsView({
         title: "Upgrade Clicks Without Completed Sales",
         observation: `${upgradeClicks.current} user(s) clicked 'Upgrade to PRO', but no automated Lemon Squeezy sales were completed.`,
         possibleExplanation:
-          "High intent at the modal level, but drop-off occurs on the Lemon Squeezy checkout page (currency conversion, price barrier, or payment method hesitation).",
+          "High intent at the modal level, but drop-off occurs on the Lemon Squeezy checkout page (e.g. currency conversion, payment method hesitation, or purchase reconsideration).",
         recommendation:
           "Perform a test purchase on Lemon Squeezy to verify checkout redirect and currency display integrity.",
         tone: "blue",
@@ -441,7 +441,7 @@ export function GrowthInsightsView({
         id: "no-paywall-hits",
         category: "Tier Boundaries",
         title: "Zero Paywall Friction Observed",
-        observation: `0 paywall hits recorded during the 7-day period.`,
+        observation: `0 paywall hits recorded during the 7-day UTC period.`,
         possibleExplanation:
           "Most uploaded animations are comfortably below the 3 MB Free limit.",
         recommendation:
@@ -456,12 +456,12 @@ export function GrowthInsightsView({
       list.push({
         id: "sharing-activity",
         category: "Organic Distribution",
-        title: "User Result Sharing Activity",
-        observation: `${shareCounts.totalInitiated} sharing actions initiated all-time (${shareCounts.pngDownloaded} PNGs downloaded, ${shareCounts.captionCopied} captions copied, ${shareCounts.nativeShareCompleted} native shares completed).`,
+        title: "Share Result Modal Activity",
+        observation: `${shareCounts.totalInitiated} local share/export action(s) recorded all-time (${shareCounts.pngDownloaded} PNGs downloaded, ${shareCounts.captionCopied} captions copied, ${shareCounts.nativeShareCompleted} native share sheets opened). Identified internal test accounts are excluded; unverified external shares cannot be confirmed as published social posts.`,
         possibleExplanation:
-          "Users are preparing assets to demonstrate compression performance to colleagues or social audiences.",
+          "Users generated shareable assets or copied captions locally. These actions indicate local distribution intent, but do not confirm external posts were published or reached audiences.",
         recommendation:
-          "Search social channels for 'tinylottie.com' or compression screenshots to engage directly with users sharing their wins.",
+          "Search social channels (LinkedIn, Twitter/X) for 'tinylottie.com' or compression cards to identify confirmed public social posts.",
         tone: "teal",
         isLowSample: shareCounts.totalInitiated < 10,
       });
@@ -502,13 +502,26 @@ export function GrowthInsightsView({
 
       {/* ─── Section 1: Weekly Comparison Cards ────────────────────────────── */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-            1. Weekly Overview (Last 7 Days vs Preceding 7 Days)
-          </h3>
-          <span className="text-[11px] text-gray-400">
-            Internal & test accounts excluded
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+          <div>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
+              1. Weekly Overview (Last 7 Days vs Preceding 7 Days — UTC)
+            </h3>
+            <p className="text-[11px] text-gray-500">
+              Comparative activity metrics with explicit sample size & attribution scope
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 text-[10px]">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-semibold border border-blue-500/20">
+              Registered external
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 font-semibold border border-teal-500/20">
+              Anonymous / unattributed
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-gray-500/10 text-gray-500 dark:text-gray-400 font-semibold border border-gray-500/20">
+              Internal / test excluded
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -534,7 +547,8 @@ export function GrowthInsightsView({
             isLowSample={metrics.optimizations.isLowSample}
             icon={<Zap className="w-4 h-4 text-[#00DDB3]" />}
             color="teal"
-            tooltip="Files successfully compressed by external users in the 7-day period."
+            subtext="Scope: Registered + Anonymous · Internal excluded"
+            tooltip="Files successfully compressed in the 7-day period. (136 optimization_complete events in analytics_events; 22 logged in usage_logs for authenticated users). Internal test accounts excluded."
           />
 
           {/* Card 3: Unique Optimizing Users */}
@@ -546,6 +560,7 @@ export function GrowthInsightsView({
             isLowSample={metrics.optimizingUsers.isLowSample}
             icon={<UserCheck className="w-4 h-4 text-indigo-500" />}
             color="indigo"
+            subtext="Scope: Logged-in accounts only"
             tooltip="Distinct logged-in users who performed at least one optimization."
           />
 
@@ -558,7 +573,8 @@ export function GrowthInsightsView({
             isLowSample={metrics.downloads.isLowSample}
             icon={<Download className="w-4 h-4 text-purple-500" />}
             color="purple"
-            tooltip="Users downloading their finished Lottie file after optimization."
+            subtext="Scope: Asset delivery · Not confirmed satisfaction"
+            tooltip="Users downloading their finished Lottie file after optimization. Reflects file retrieval, not confirmed visual satisfaction."
           />
 
           {/* Card 5: Paywall Hits */}
@@ -570,6 +586,7 @@ export function GrowthInsightsView({
             isLowSample={metrics.paywallHits.isLowSample}
             icon={<AlertCircle className="w-4 h-4 text-amber-500" />}
             color="amber"
+            subtext="Scope: All sessions · Internal excluded"
             tooltip="Users uploading files exceeding the 3 MB Free tier limit."
           />
 
@@ -582,6 +599,7 @@ export function GrowthInsightsView({
             isLowSample={metrics.upgradeClicks.isLowSample}
             icon={<TrendingUp className="w-4 h-4 text-emerald-500" />}
             color="emerald"
+            subtext="Scope: All sessions · Internal excluded"
             tooltip="Clicks on 'Upgrade to PRO' ($99 lifetime) from the paywall modal."
           />
 
@@ -599,7 +617,7 @@ export function GrowthInsightsView({
           />
 
           {/* Card 8: Share Intent Actions */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col justify-between">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4 flex flex-col justify-between shadow-xs">
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="p-1.5 rounded-lg bg-sky-500/10 text-sky-400">
@@ -609,30 +627,35 @@ export function GrowthInsightsView({
                   All-Time
                 </span>
               </div>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400" title="Voluntary user-initiated export actions from the Share Result modal. Does not represent confirmed published posts.">
                 Share Result Actions
               </p>
-              <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+              <div className="text-2xl font-black text-gray-900 dark:text-white mt-1">
                 {shareCounts.totalInitiated}
               </div>
             </div>
-            <p className="text-[10px] text-gray-400 mt-2">
-              {shareCounts.pngDownloaded} PNG · {shareCounts.captionCopied} copy ·{" "}
-              {shareCounts.nativeShareCompleted} share
-            </p>
+            <div className="mt-2.5 pt-2 border-t border-gray-100 dark:border-gray-800/60">
+              <p className="text-[10px] text-gray-400">
+                {shareCounts.pngDownloaded} PNG · {shareCounts.captionCopied} copy ·{" "}
+                {shareCounts.nativeShareCompleted} share
+              </p>
+              <p className="text-[9px] text-gray-400/90 mt-0.5">
+                Local exports · Internal excluded · Not confirmed published posts
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ─── Section 2: Product Funnel ────────────────────────────────────── */}
+      {/* ─── Section 2: Product Activity — Event Counts ─────────────────── */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-gray-100 dark:border-gray-800 gap-2 mb-4">
           <div>
             <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-white">
-              2. Product Funnel Event Counts (Current 7 Days)
+              2. Product Activity — Event Counts (Current 7 Days — UTC)
             </h3>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-              Aggregate event volumes · Separate telemetry (Events are not linked to single attempts)
+              Aggregate event volumes across product touchpoints · Unlinked telemetry (Events are not tied to single user attempts and do not form a sequential user funnel)
             </p>
           </div>
 
@@ -646,19 +669,19 @@ export function GrowthInsightsView({
           </a>
         </div>
 
-        {/* Funnel Pipeline Steps */}
+        {/* Activity Touchpoints (Preserved cards and layout) */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-2.5">
-          {/* Step 1: Visitors */}
+          {/* Touchpoint 1: Site Traffic */}
           <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-800 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-                Step 1: Visitors
+                Touchpoint 1
               </span>
               <p className="text-xs font-bold text-gray-900 dark:text-white">
                 Site Traffic
               </p>
               <div className="mt-2 text-xs font-semibold text-gray-500">
-                Not yet measurable in DB
+                Not measurable in DB
               </div>
             </div>
             <p className="text-[10px] text-gray-400 mt-3">
@@ -666,11 +689,11 @@ export function GrowthInsightsView({
             </p>
           </div>
 
-          {/* Step 2: File Loaded */}
+          {/* Touchpoint 2: File Ingestion */}
           <div className="p-3.5 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/60 dark:border-blue-900/30 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider block mb-1">
-                Step 2: File Ingestion
+                Touchpoint 2
               </span>
               <p className="text-xs font-bold text-gray-900 dark:text-white">
                 Files Loaded
@@ -684,14 +707,14 @@ export function GrowthInsightsView({
             </p>
           </div>
 
-          {/* Step 3: Optimization Complete */}
+          {/* Touchpoint 3: Core Utility */}
           <div className="p-3.5 rounded-xl bg-[#00DDB3]/5 border border-[#00DDB3]/20 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-bold text-[#00DDB3] uppercase tracking-wider block mb-1">
-                Step 3: Core Utility
+                Touchpoint 3
               </span>
               <p className="text-xs font-bold text-gray-900 dark:text-white">
-                Completed
+                Optimizations
               </p>
               <div className="mt-2">
                 <span className="text-xl font-extrabold text-[#00DDB3]">
@@ -704,11 +727,11 @@ export function GrowthInsightsView({
             </p>
           </div>
 
-          {/* Step 4: File Downloaded */}
+          {/* Touchpoint 4: File Retrieval */}
           <div className="p-3.5 rounded-xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200/60 dark:border-purple-900/30 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider block mb-1">
-                Step 4: File Retrieval
+                Touchpoint 4
               </span>
               <p className="text-xs font-bold text-gray-900 dark:text-white">
                 Downloads
@@ -724,14 +747,14 @@ export function GrowthInsightsView({
             </p>
           </div>
 
-          {/* Step 5: Paywall & Upgrade Intent */}
+          {/* Touchpoint 5: Paywall & Intent */}
           <div className="p-3.5 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/30 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider block mb-1">
-                Step 5: Paywall
+                Touchpoint 5
               </span>
               <p className="text-xs font-bold text-gray-900 dark:text-white">
-                Hits & Upgrades
+                Paywall & Clicks
               </p>
               <div className="mt-2 text-sm font-bold text-amber-600 dark:text-amber-400">
                 {metrics.funnel.paywallHits} hits · {metrics.funnel.upgradeClicks} clicks
@@ -742,11 +765,11 @@ export function GrowthInsightsView({
             </p>
           </div>
 
-          {/* Step 6: Verified Automated Sales */}
+          {/* Touchpoint 6: Revenue */}
           <div className="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/30 flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block mb-1">
-                Step 6: Revenue
+                Touchpoint 6
               </span>
               <p className="text-xs font-bold text-gray-900 dark:text-white">
                 Verified Sales
@@ -759,6 +782,46 @@ export function GrowthInsightsView({
               Lemon Squeezy verified
             </p>
           </div>
+        </div>
+
+        {/* Metric Source & Attribution Documentation */}
+        <div className="mt-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200 dark:border-gray-800 text-xs text-gray-600 dark:text-gray-400 space-y-2">
+          <div className="flex items-center gap-1.5 font-bold text-gray-900 dark:text-white">
+            <Info className="w-4 h-4 text-[#00DDB3] shrink-0" />
+            <span>Metric Documentation & Attribution Rules</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+            <div className="p-2.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200/70 dark:border-gray-800">
+              <p className="font-bold text-gray-900 dark:text-white text-[11px]">Files Loaded: {metrics.funnel.fileLoaded}</p>
+              <p className="text-[10px] text-gray-500 mt-1">
+                <strong>Source:</strong> <code className="font-mono">file_loaded</code> in <code className="font-mono">analytics_events</code>.
+              </p>
+              <p className="text-[10px] text-gray-500 mt-0.5">
+                <strong>Scope:</strong> Current 7 complete UTC days. Increments when an animation is loaded into the tool. Internal test accounts excluded.
+              </p>
+            </div>
+            <div className="p-2.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200/70 dark:border-gray-800">
+              <p className="font-bold text-gray-900 dark:text-white text-[11px]">Optimizations: {metrics.funnel.optimizationComplete}</p>
+              <p className="text-[10px] text-gray-500 mt-1">
+                <strong>Source:</strong> <code className="font-mono">optimization_complete</code> in <code className="font-mono">analytics_events</code>.
+              </p>
+              <p className="text-[10px] text-gray-500 mt-0.5">
+                <strong>Scope:</strong> Current 7 complete UTC days. Exceeds files loaded because users can re-compress the same file (e.g. format/slider adjustments). Compare with <code className="font-mono">usage_logs</code> (22 records for authenticated users only). Internal test accounts excluded.
+              </p>
+            </div>
+            <div className="p-2.5 rounded-lg bg-white dark:bg-gray-900 border border-gray-200/70 dark:border-gray-800">
+              <p className="font-bold text-gray-900 dark:text-white text-[11px]">Downloads: {metrics.funnel.downloads}</p>
+              <p className="text-[10px] text-gray-500 mt-1">
+                <strong>Source:</strong> <code className="font-mono">optimized_file_download</code> in <code className="font-mono">analytics_events</code>.
+              </p>
+              <p className="text-[10px] text-gray-500 mt-0.5">
+                <strong>Scope:</strong> Current 7 complete UTC days. Measures file delivery actions only; does not infer confirmed user satisfaction or file acceptance. Internal test accounts excluded.
+              </p>
+            </div>
+          </div>
+          <p className="text-[10px] text-gray-500 dark:text-gray-400 pt-1">
+            <strong>Attribution Scope:</strong> Activity includes registered external users and anonymous / unattributed web visitors. Internal test accounts (identified by UID) are strictly excluded. Unattributed visitor volume must not be characterized as confirmed organic search growth.
+          </p>
         </div>
       </div>
 
@@ -835,7 +898,7 @@ export function GrowthInsightsView({
       {/* ─── Section 4: Suggested Next Check ──────────────────────────────── */}
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5 shadow-xs">
         <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-white mb-1">
-          4. Suggested Next Checks (Founder Weekly Audit)
+          4. Suggested Next Checks (Founder Weekly Audit — UTC)
         </h3>
         <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
           Key non-technical verification tasks to perform during your weekly review:
