@@ -8,6 +8,9 @@ import {
   query,
   orderBy,
   limit,
+  where,
+  startAfter,
+  Timestamp,
 } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import {
@@ -48,6 +51,7 @@ import {
   ProOriginType,
   PRO_ORIGIN_CONFIG,
 } from "@/lib/config/internal-accounts";
+import { GrowthInsightsView } from "@/components/admin/GrowthInsightsView";
 
 interface UsageLog {
   id: string;
@@ -111,7 +115,7 @@ function formatLogName(log: UsageLog): string {
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<"analytics" | "users">("users");
+  const [activeTab, setActiveTab] = useState<"insights" | "analytics" | "users">("insights");
 
   // Analytics & Logs state
   const [logs, setLogs] = useState<UsageLog[]>([]);
@@ -140,35 +144,78 @@ export default function AdminPage() {
 
   const isAdmin = user ? isAdminUser(user.uid) : false;
 
-  // Fetch Usage Logs & Analytics (only when Analytics tab is active)
+  // Fetch Usage Logs & Analytics whenever user is Admin (for Growth Insights & Analytics tabs)
   useEffect(() => {
     async function fetchLogs() {
-      if (!isAdmin || activeTab !== "analytics") return;
+      if (!isAdmin) return;
       setFetchingLogs(true);
       setError(null);
       try {
+        // Strict 14 complete UTC days timestamp range for growth analytics
+        const now = new Date();
+        const todayMidnightUTC = new Date(
+          Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            0,
+            0,
+            0,
+            0
+          )
+        );
+        const priorPeriodStart = new Date(
+          todayMidnightUTC.getTime() - 14 * 86400000
+        );
+        const minTimestamp = Timestamp.fromDate(priorPeriodStart);
+
+        // Fetch usage logs (all recent logs up to 500)
         const q = query(
           collection(db, "usage_logs"),
           orderBy("timestamp", "desc"),
-          limit(200)
+          limit(500)
         );
-        const eq = query(
-          collection(db, "analytics_events"),
-          orderBy("timestamp", "desc"),
-          limit(200)
-        );
-        const [snapshot, esnapshot] = await Promise.all([
-          getDocs(q),
-          getDocs(eq),
-        ]);
+        const snapshot = await getDocs(q);
         const data = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         })) as UsageLog[];
-        const edata = esnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as AnalyticsEventLog[];
+
+        // Paginated indexed range query for analytics_events covering the entire 14-day reporting window
+        const edata: AnalyticsEventLog[] = [];
+        let lastVisibleDoc: any = null;
+        let keepPaging = true;
+
+        while (keepPaging) {
+          const eq = lastVisibleDoc
+            ? query(
+                collection(db, "analytics_events"),
+                where("timestamp", ">=", minTimestamp),
+                orderBy("timestamp", "desc"),
+                startAfter(lastVisibleDoc),
+                limit(500)
+              )
+            : query(
+                collection(db, "analytics_events"),
+                where("timestamp", ">=", minTimestamp),
+                orderBy("timestamp", "desc"),
+                limit(500)
+              );
+
+          const esnapshot = await getDocs(eq);
+          if (esnapshot.empty) break;
+
+          esnapshot.docs.forEach((doc) => {
+            edata.push({ id: doc.id, ...doc.data() } as AnalyticsEventLog);
+          });
+
+          if (esnapshot.docs.length < 500) {
+            keepPaging = false;
+          } else {
+            lastVisibleDoc = esnapshot.docs[esnapshot.docs.length - 1];
+          }
+        }
+
         setLogs(data);
         setEvents(edata);
       } catch (err: any) {
@@ -179,10 +226,10 @@ export default function AdminPage() {
       }
     }
 
-    if (!loading && isAdmin && activeTab === "analytics") {
+    if (!loading && isAdmin) {
       fetchLogs();
     }
-  }, [isAdmin, loading, activeTab, refreshKey]);
+  }, [isAdmin, loading, refreshKey]);
 
   // Fetch Users for Users Tab
   const fetchUsers = async () => {
@@ -619,24 +666,24 @@ export default function AdminPage() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex border-b border-gray-200 dark:border-gray-800 gap-6">
+        <div className="flex border-b border-gray-200 dark:border-gray-800 gap-6 overflow-x-auto">
           <button
-            onClick={() => setActiveTab("users")}
-            className={`pb-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all ${
-              activeTab === "users"
+            onClick={() => setActiveTab("insights")}
+            className={`pb-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all shrink-0 cursor-pointer ${
+              activeTab === "insights"
                 ? "border-[#00DDB3] text-[#00DDB3]"
                 : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
             }`}
           >
-            <Users className="w-4 h-4" />
-            Users & PRO Management
-            <span className="ml-1.5 px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
-              {adminUsers.length}
+            <Sparkles className="w-4 h-4" />
+            Growth Insights
+            <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-[#00DDB3]/15 text-[#00DDB3]">
+              Weekly
             </span>
           </button>
           <button
             onClick={() => setActiveTab("analytics")}
-            className={`pb-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all ${
+            className={`pb-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all shrink-0 cursor-pointer ${
               activeTab === "analytics"
                 ? "border-[#00DDB3] text-[#00DDB3]"
                 : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
@@ -648,7 +695,35 @@ export default function AdminPage() {
               {logs.length}
             </span>
           </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`pb-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all shrink-0 cursor-pointer ${
+              activeTab === "users"
+                ? "border-[#00DDB3] text-[#00DDB3]"
+                : "border-transparent text-gray-500 hover:text-gray-900 dark:hover:text-white"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Users & PRO Management
+            <span className="ml-1.5 px-2 py-0.5 text-xs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400">
+              {adminUsers.length}
+            </span>
+          </button>
         </div>
+
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {/* GROWTH INSIGHTS TAB */}
+        {/* ═══════════════════════════════════════════════════════════════════ */}
+        {activeTab === "insights" && (
+          <GrowthInsightsView
+            logs={logs}
+            events={events}
+            adminUsers={adminUsers}
+            salesMetrics={salesMetrics}
+            shareCounts={shareCounts}
+            loading={fetchingLogs || fetchingUsers}
+          />
+        )}
 
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {/* USERS & PRO MANAGEMENT TAB */}
