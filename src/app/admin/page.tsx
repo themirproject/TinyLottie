@@ -35,6 +35,8 @@ import {
   X,
   Receipt,
   HelpCircle,
+  Share2,
+  Copy,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -393,6 +395,30 @@ export default function AdminPage() {
       }
     });
     return counts;
+  }, [filteredEvents]);
+
+  const shareCounts = useMemo(() => {
+    let pngDownloaded = 0;
+    let captionCopied = 0;
+    let nativeShareCompleted = 0;
+    let nativeShareCancelled = 0;
+
+    filteredEvents.forEach((e: any) => {
+      if (e.event === "optimization_result_shared") {
+        if (e.action === "download_png") pngDownloaded++;
+        else if (e.action === "copy_caption") captionCopied++;
+        else if (e.action === "native_share_completed" || e.action === "native_share") nativeShareCompleted++;
+        else if (e.action === "native_share_cancelled") nativeShareCancelled++;
+      }
+    });
+
+    return {
+      pngDownloaded,
+      captionCopied,
+      nativeShareCompleted,
+      nativeShareCancelled,
+      totalInitiated: pngDownloaded + captionCopied + nativeShareCompleted,
+    };
   }, [filteredEvents]);
 
   const stats = useMemo(() => {
@@ -1292,6 +1318,75 @@ export default function AdminPage() {
                     <p className="text-[10px] text-gray-400 font-mono mt-2">{e.event}</p>
                   </div>
                 ))}
+              </div>
+
+              {/* Share & Organic Distribution Breakdown */}
+              <div className="mt-6 pt-5 border-t border-gray-100 dark:border-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                      <Share2 className="w-3.5 h-3.5 text-[#00DDB3]" />
+                      Share & Distribution Actions
+                    </h4>
+                    <p className="text-[11px] text-gray-500">
+                      User-initiated export and share actions (Local exports & share sheets — not confirmed published posts)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="rounded-xl p-3.5 bg-sky-500/10 border border-sky-500/20 flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="p-1 rounded-md bg-sky-500/20 text-sky-400">
+                        <Download className="w-3.5 h-3.5" />
+                      </span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        {shareCounts.pngDownloaded.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">PNG Downloaded</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-1">download_png</p>
+                  </div>
+
+                  <div className="rounded-xl p-3.5 bg-amber-500/10 border border-amber-500/20 flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="p-1 rounded-md bg-amber-500/20 text-amber-400">
+                        <Copy className="w-3.5 h-3.5" />
+                      </span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        {shareCounts.captionCopied.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Caption Copied</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-1">copy_caption</p>
+                  </div>
+
+                  <div className="rounded-xl p-3.5 bg-emerald-500/10 border border-emerald-500/20 flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="p-1 rounded-md bg-emerald-500/20 text-emerald-400">
+                        <Share2 className="w-3.5 h-3.5" />
+                      </span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        {shareCounts.nativeShareCompleted.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Native Share Completed</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-1">native_share_completed</p>
+                  </div>
+
+                  <div className="rounded-xl p-3.5 bg-gray-500/10 border border-gray-500/20 flex flex-col justify-between">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="p-1 rounded-md bg-gray-500/20 text-gray-400">
+                        <X className="w-3.5 h-3.5" />
+                      </span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        {shareCounts.nativeShareCancelled.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="text-xs font-semibold text-gray-800 dark:text-gray-200">Native Share Cancelled</p>
+                    <p className="text-[10px] text-gray-400 font-mono mt-1">native_share_cancelled</p>
+                  </div>
+                </div>
               </div>
             </div>
 

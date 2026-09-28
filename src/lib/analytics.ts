@@ -155,6 +155,41 @@ export function trackDownload(params: {
   });
 }
 
+// ─── Share Result ──────────────────────────────────────────────────────────
+
+/**
+ * Fired when a user initiates a share action (download PNG, copy caption, native share completed/cancelled).
+ * Note: These track local export and platform share intent, not confirmed published posts.
+ * Zero file contents or filenames are sent.
+ */
+export function trackOptimizationResultShared(params: {
+  action:
+    | "download_png"
+    | "copy_caption"
+    | "native_share_completed"
+    | "native_share_cancelled"
+    | "native_share";
+  reductionPct: number;
+  originalSizeKb: number;
+  optimizedSizeKb: number;
+  sourceRoute?: string;
+}) {
+  gtag("event", "optimization_result_shared", {
+    action: params.action,
+    reduction_pct: params.reductionPct,
+    original_size_kb: Math.round(params.originalSizeKb),
+    optimized_size_kb: Math.round(params.optimizedSizeKb),
+    source_route: params.sourceRoute || "/",
+  });
+  logToFirestore("optimization_result_shared", {
+    action: params.action,
+    reduction_pct: params.reductionPct,
+    original_size_kb: Math.round(params.originalSizeKb),
+    optimized_size_kb: Math.round(params.optimizedSizeKb),
+    source_route: params.sourceRoute || "/",
+  });
+}
+
 // ─── Auth ────────────────────────────────────────────────────────────────────
 
 /**

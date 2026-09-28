@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "motion/react";
-import { Download, FileJson, Loader2, ArrowLeft, RefreshCw, Sparkles, CheckCircle2 } from "lucide-react";
+import { Download, FileJson, Loader2, ArrowLeft, RefreshCw, Sparkles, CheckCircle2, Share2 } from "lucide-react";
 import { LottiePreview } from "./LottiePreview";
 import { OptimizationLoader } from "./OptimizationLoader";
 import { OptimizationError } from "./OptimizationError";
+import { ShareResultModal } from "./ShareResultModal";
 import { Button } from "./ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { LottieData, formatFileSize } from "@/lib/hooks/useLottieOptimizer";
@@ -34,6 +36,7 @@ export function LottieOptimizerWorkspace({
   onDownload,
   onReset,
 }: LottieOptimizerWorkspaceProps) {
+  const [showShareModal, setShowShareModal] = useState(false);
   const originalBytes = lottieData.file.size;
   const optimizedBytes = lottieData.optimizedData
     ? new Blob([JSON.stringify(lottieData.optimizedData)]).size
@@ -230,6 +233,22 @@ export function LottieOptimizerWorkspace({
                   <Download className="w-5 h-5 mr-2" />
                   Download {outputFormat === "lottie" ? ".lottie" : ".json"} File
                 </Button>
+
+                {/* Secondary Action: Share Result */}
+                {reductionPct > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowShareModal(true)}
+                    className="w-full h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold text-xs sm:text-sm shadow-xs transition-all cursor-pointer"
+                  >
+                    <Share2 className="w-4 h-4 text-[#00DDB3]" />
+                    Share Result
+                  </button>
+                ) : (
+                  <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 text-center text-xs text-gray-500 dark:text-gray-400">
+                    Animation is already optimal (0% reduction). Original preserved.
+                  </div>
+                )}
               </motion.div>
             ) : (
               <div className="mt-auto p-4 bg-gray-50 dark:bg-gray-950/60 rounded-xl text-center border border-gray-100 dark:border-gray-800">
@@ -241,6 +260,16 @@ export function LottieOptimizerWorkspace({
           </motion.div>
         </div>
       </div>
+
+      {/* Share Result Modal */}
+      <ShareResultModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        originalSizeBytes={originalBytes}
+        optimizedSizeBytes={optimizedBytes || originalBytes}
+        formatFileSize={formatFileSize}
+        sourceRoute={typeof window !== "undefined" ? window.location.pathname : "/"}
+      />
     </div>
   );
 }
