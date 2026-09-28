@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
+import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 
 const platforms = [
@@ -238,12 +239,12 @@ export function SEOGuides() {
               <span className="text-xs text-gray-500 dark:text-gray-400">
                 TinyLottie handles all the heavy lifting — just drag &amp; drop your file.
               </span>
-              <a
-                href="/"
+              <Link
+                href="/lottie-compressor"
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#00DDB3] hover:gap-2.5 transition-all"
               >
-                Try it free <ArrowRight className="w-3.5 h-3.5" />
-              </a>
+                Launch Lottie Compressor <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </motion.div>
         </AnimatePresence>

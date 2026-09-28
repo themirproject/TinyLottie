@@ -31,6 +31,10 @@ import {
   Check,
   UserX,
   Sparkles,
+  Edit3,
+  X,
+  Receipt,
+  HelpCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -39,6 +43,8 @@ import {
   isInternalUser,
   classifyUserActivity,
   ActivitySegment,
+  ProOriginType,
+  PRO_ORIGIN_CONFIG,
 } from "@/lib/config/internal-accounts";
 
 interface UsageLog {
@@ -65,6 +71,11 @@ interface AdminUser {
   displayName: string;
   photoURL: string;
   isPro: boolean;
+  proOrigin?: ProOriginType;
+  proOriginNotes?: string;
+  proOriginVerifiedAt?: string;
+  proOriginVerifiedBy?: string;
+  lemonSqueezyOrderId?: string;
   createdAt: string;
   lastSignInTime: string;
 }
@@ -114,8 +125,16 @@ export default function AdminPage() {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [fetchingUsers, setFetchingUsers] = useState(false);
   const [userSearch, setUserSearch] = useState("");
-  const [userStatusFilter, setUserStatusFilter] = useState<"all" | "pro" | "free">("all");
+  const [userFilter, setUserFilter] = useState<
+    "all" | "sales" | "manual_sales" | "promo" | "unverified" | "pro" | "free"
+  >("all");
   const [updatingUid, setUpdatingUid] = useState<string | null>(null);
+
+  // Safe Origin Classification Modal State
+  const [editingOriginUser, setEditingOriginUser] = useState<AdminUser | null>(null);
+  const [selectedOrigin, setSelectedOrigin] = useState<ProOriginType>("historical_manual_sale");
+  const [originNotes, setOriginNotes] = useState("");
+  const [savingOrigin, setSavingOrigin] = useState(false);
 
   const isAdmin = user ? isAdminUser(user.uid) : false;
 
@@ -243,6 +262,67 @@ export default function AdminPage() {
       toast.error(err.message || "Failed to update status");
     } finally {
       setUpdatingUid(null);
+    }
+  };
+
+  // Open Safe Classification Modal
+  const openClassifyModal = (targetUser: AdminUser) => {
+    setEditingOriginUser(targetUser);
+    setSelectedOrigin(targetUser.proOrigin || "historical_manual_sale");
+    setOriginNotes(targetUser.proOriginNotes || "");
+  };
+
+  // Save Entitlement Origin Classification (Safe admin-only mechanism, does not touch isPro)
+  const handleSaveOrigin = async () => {
+    if (!editingOriginUser) return;
+    setSavingOrigin(true);
+
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) {
+        toast.error("Session expired. Please re-login.");
+        return;
+      }
+
+      const res = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          uid: editingOriginUser.uid,
+          proOrigin: selectedOrigin,
+          notes: originNotes,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update origin");
+      }
+
+      // Optimistic update in adminUsers state
+      setAdminUsers((prev) =>
+        prev.map((u) =>
+          u.uid === editingOriginUser.uid
+            ? {
+                ...u,
+                proOrigin: selectedOrigin,
+                proOriginNotes: originNotes,
+                proOriginVerifiedAt: new Date().toISOString(),
+                proOriginVerifiedBy: user?.email || "admin",
+              }
+            : u
+        )
+      );
+
+      toast.success(`Updated origin for ${editingOriginUser.email || "user"}`);
+      setEditingOriginUser(null);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to update origin");
+    } finally {
+      setSavingOrigin(false);
     }
   };
 
@@ -374,13 +454,61 @@ export default function AdminPage() {
     return { totalOriginal, totalOptimized, totalSaved, uniqueUsers, avgRatio, best, days, topSaved };
   }, [filtered, logs, activitySegment]);
 
+  // Derived Sales & Entitlement Metrics
+  const salesMetrics = useMemo(() => {
+    let totalVerifiedSales = 0;
+    let historicalManualSales = 0;
+    let automatedSales = 0;
+    let complimentaryGrants = 0;
+    let internalTests = 0;
+    let unknownOrigins = 0;
+
+    adminUsers.forEach((u) => {
+      if (!u.isPro) return;
+      if (u.proOrigin === "historical_manual_sale") {
+        historicalManualSales++;
+        totalVerifiedSales++;
+      } else if (u.proOrigin === "automated_sale") {
+        automatedSales++;
+        totalVerifiedSales++;
+      } else if (u.proOrigin === "complimentary_grant") {
+        complimentaryGrants++;
+      } else if (u.proOrigin === "internal_test") {
+        internalTests++;
+      } else {
+        unknownOrigins++;
+      }
+    });
+
+    return {
+      totalVerifiedSales,
+      historicalManualSales,
+      automatedSales,
+      complimentaryGrants,
+      internalTests,
+      unknownOrigins,
+    };
+  }, [adminUsers]);
+
   // Derived Users
   const filteredUsers = useMemo(() => {
     let list = adminUsers;
 
-    if (userStatusFilter === "pro") {
+    if (userFilter === "sales") {
+      list = list.filter(
+        (u) =>
+          u.isPro &&
+          (u.proOrigin === "historical_manual_sale" || u.proOrigin === "automated_sale")
+      );
+    } else if (userFilter === "manual_sales") {
+      list = list.filter((u) => u.isPro && u.proOrigin === "historical_manual_sale");
+    } else if (userFilter === "promo") {
+      list = list.filter((u) => u.isPro && u.proOrigin === "complimentary_grant");
+    } else if (userFilter === "unverified") {
+      list = list.filter((u) => u.isPro && (!u.proOrigin || u.proOrigin === "unknown"));
+    } else if (userFilter === "pro") {
       list = list.filter((u) => u.isPro);
-    } else if (userStatusFilter === "free") {
+    } else if (userFilter === "free") {
       list = list.filter((u) => !u.isPro);
     }
 
@@ -390,12 +518,13 @@ export default function AdminPage() {
         (u) =>
           u.email.toLowerCase().includes(q) ||
           u.displayName.toLowerCase().includes(q) ||
-          u.uid.toLowerCase().includes(q)
+          u.uid.toLowerCase().includes(q) ||
+          u.proOriginNotes?.toLowerCase().includes(q)
       );
     }
 
     return list;
-  }, [adminUsers, userStatusFilter, userSearch]);
+  }, [adminUsers, userFilter, userSearch]);
 
   const proCount = adminUsers.filter((u) => u.isPro).length;
   const freeCount = adminUsers.length - proCount;
@@ -500,7 +629,7 @@ export default function AdminPage() {
         {/* ═══════════════════════════════════════════════════════════════════ */}
         {activeTab === "users" && (
           <div className="space-y-6">
-            {/* KPI Cards for Users */}
+            {/* Top KPI Cards - Overview & Verified Sales */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-2">
@@ -521,18 +650,83 @@ export default function AdminPage() {
                   <Crown className="w-5 h-5 text-[#00DDB3]" />
                 </div>
                 <p className="text-2xl font-bold text-[#00DDB3]">{proCount}</p>
-                <p className="text-xs text-gray-400 mt-1">{((proCount / (adminUsers.length || 1)) * 100).toFixed(1)}% conversion rate</p>
+                <p className="text-xs text-gray-400 mt-1">{((proCount / (adminUsers.length || 1)) * 100).toFixed(1)}% total conversion rate</p>
               </div>
 
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-5">
+              <div className="bg-white dark:bg-gray-900 border border-emerald-500/40 dark:border-emerald-500/30 rounded-2xl p-5 relative overflow-hidden bg-gradient-to-br from-emerald-500/5 to-transparent">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-                    Free Tier Users
+                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">
+                    Total Verified Sales
                   </span>
-                  <UserX className="w-5 h-5 text-gray-400" />
+                  <Receipt className="w-5 h-5 text-emerald-500" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-white">{freeCount}</p>
-                <p className="text-xs text-gray-400 mt-1">Can be upgraded with 1 click</p>
+                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">{salesMetrics.totalVerifiedSales}</p>
+                <p className="text-xs text-emerald-700/80 dark:text-emerald-400/70 mt-1">
+                  {salesMetrics.historicalManualSales} manual + {salesMetrics.automatedSales} automated
+                </p>
+              </div>
+            </div>
+
+            {/* Sub-KPI Row: Detailed Entitlement Breakdown */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3.5">
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Historical Manual Sales
+                </p>
+                <div className="flex items-baseline gap-2 mt-1.5">
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {salesMetrics.historicalManualSales}
+                  </span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                    Verified
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">Fulfilled via manual coupon</p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3.5">
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Automated Sales
+                </p>
+                <div className="flex items-baseline gap-2 mt-1.5">
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {salesMetrics.automatedSales}
+                  </span>
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
+                    Lemon Squeezy
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">Direct checkout orders</p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3.5">
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Complimentary / Promo
+                </p>
+                <div className="flex items-baseline gap-2 mt-1.5">
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {salesMetrics.complimentaryGrants}
+                  </span>
+                  <span className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold">
+                    Courtesy
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">Partners & promotional grants</p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-3.5">
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Internal & Unverified
+                </p>
+                <div className="flex items-baseline gap-2 mt-1.5">
+                  <span className="text-xl font-bold text-gray-900 dark:text-white">
+                    {salesMetrics.internalTests + salesMetrics.unknownOrigins}
+                  </span>
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold">
+                    {salesMetrics.internalTests} test / {salesMetrics.unknownOrigins} unverified
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 mt-0.5">Exempt from sales metrics</p>
               </div>
             </div>
 
@@ -540,18 +734,28 @@ export default function AdminPage() {
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden shadow-xs">
               {/* Toolbar */}
               <div className="flex items-center justify-between flex-wrap gap-4 px-6 py-4 border-b border-gray-200 dark:border-gray-800">
-                <div className="flex items-center gap-2">
-                  {(["all", "pro", "free"] as const).map((status) => (
+                <div className="flex items-center flex-wrap gap-2">
+                  {(
+                    [
+                      { id: "all", label: `All Users (${adminUsers.length})` },
+                      { id: "sales", label: `Verified Sales (${salesMetrics.totalVerifiedSales})` },
+                      { id: "manual_sales", label: `Manual Sales (${salesMetrics.historicalManualSales})` },
+                      { id: "promo", label: `Promo / Grants (${salesMetrics.complimentaryGrants})` },
+                      { id: "unverified", label: `Unverified PRO (${salesMetrics.unknownOrigins})` },
+                      { id: "pro", label: `All PRO (${proCount})` },
+                      { id: "free", label: `Free (${freeCount})` },
+                    ] as const
+                  ).map((btn) => (
                     <button
-                      key={status}
-                      onClick={() => setUserStatusFilter(status)}
+                      key={btn.id}
+                      onClick={() => setUserFilter(btn.id)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                        userStatusFilter === status
+                        userFilter === btn.id
                           ? "bg-[#00DDB3] text-white"
                           : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                       }`}
                     >
-                      {status === "all" ? "All Users" : status === "pro" ? `PRO (${proCount})` : `Free (${freeCount})`}
+                      {btn.label}
                     </button>
                   ))}
                 </div>
@@ -560,10 +764,10 @@ export default function AdminPage() {
                   <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
-                    placeholder="Search by email or name…"
+                    placeholder="Search by email, name, or coupon notes…"
                     value={userSearch}
                     onChange={(e) => setUserSearch(e.target.value)}
-                    className="pl-9 pr-3 py-1.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00DDB3]/40 w-64"
+                    className="pl-9 pr-3 py-1.5 text-xs border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00DDB3]/40 w-72"
                   />
                 </div>
               </div>
@@ -574,24 +778,25 @@ export default function AdminPage() {
                   <thead>
                     <tr className="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-800">
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">User</th>
+                      <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Entitlement Origin</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Joined Date</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Last Sign In</th>
                       <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Action</th>
+                      <th className="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {fetchingUsers ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400">
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400">
                           <Loader2 className="w-6 h-6 animate-spin mx-auto text-[#00DDB3] mb-2" />
                           Loading users...
                         </td>
                       </tr>
                     ) : filteredUsers.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-gray-400 text-sm">
-                          No users found matching your search.
+                        <td colSpan={6} className="px-6 py-12 text-center text-gray-400 text-sm">
+                          No users found matching your filter or search.
                         </td>
                       </tr>
                     ) : (
@@ -619,11 +824,45 @@ export default function AdminPage() {
                                   <p className="text-sm font-semibold text-gray-900 dark:text-white">
                                     {u.displayName || "Google User"}
                                   </p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
                                     {u.email}
                                   </p>
                                 </div>
                               </div>
+                            </td>
+
+                            {/* Entitlement Origin */}
+                            <td className="px-6 py-3.5 whitespace-nowrap">
+                              {u.isPro ? (
+                                (() => {
+                                  const originKey = u.proOrigin || "unknown";
+                                  const cfg = PRO_ORIGIN_CONFIG[originKey] || PRO_ORIGIN_CONFIG.unknown;
+                                  return (
+                                    <div className="flex items-center gap-1.5">
+                                      <span
+                                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${cfg.badgeColor}`}
+                                        title={u.proOriginNotes || cfg.description}
+                                      >
+                                        {cfg.shortLabel}
+                                      </span>
+                                      <button
+                                        onClick={() => openClassifyModal(u)}
+                                        title="Classify entitlement origin"
+                                        className="p-1 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                      >
+                                        <Edit3 className="w-3.5 h-3.5" />
+                                      </button>
+                                      {u.proOriginNotes && (
+                                        <span className="text-[10px] text-gray-400 max-w-[140px] truncate" title={u.proOriginNotes}>
+                                          {u.proOriginNotes}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })()
+                              ) : (
+                                <span className="text-xs text-gray-400">—</span>
+                              )}
                             </td>
 
                             {/* Registered Date */}
@@ -650,31 +889,42 @@ export default function AdminPage() {
                               )}
                             </td>
 
-                            {/* Action Button */}
+                            {/* Action Buttons */}
                             <td className="px-6 py-3.5 whitespace-nowrap text-right">
-                              <button
-                                onClick={() => handleTogglePro(u)}
-                                disabled={isUpdating}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-xs ${
-                                  u.isPro
-                                    ? "bg-gray-100 hover:bg-red-50 hover:text-red-600 dark:bg-gray-800 dark:hover:bg-red-950/30 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
-                                    : "bg-[#00DDB3] hover:bg-[#00C9A7] text-white"
-                                } disabled:opacity-50`}
-                              >
-                                {isUpdating ? (
-                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : u.isPro ? (
-                                  <>
-                                    <UserX className="w-3.5 h-3.5" />
-                                    Make Free
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                    Make PRO
-                                  </>
+                              <div className="flex items-center justify-end gap-1.5">
+                                {u.isPro && (
+                                  <button
+                                    onClick={() => openClassifyModal(u)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 border border-gray-200 dark:border-gray-700 transition-colors"
+                                  >
+                                    <Edit3 className="w-3 h-3" />
+                                    Origin
+                                  </button>
                                 )}
-                              </button>
+                                <button
+                                  onClick={() => handleTogglePro(u)}
+                                  disabled={isUpdating}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all shadow-xs ${
+                                    u.isPro
+                                      ? "bg-gray-100 hover:bg-red-50 hover:text-red-600 dark:bg-gray-800 dark:hover:bg-red-950/30 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-700"
+                                      : "bg-[#00DDB3] hover:bg-[#00C9A7] text-white"
+                                  } disabled:opacity-50`}
+                                >
+                                  {isUpdating ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : u.isPro ? (
+                                    <>
+                                      <UserX className="w-3.5 h-3.5" />
+                                      Make Free
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Sparkles className="w-3.5 h-3.5" />
+                                      Make PRO
+                                    </>
+                                  )}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -685,11 +935,171 @@ export default function AdminPage() {
               </div>
 
               {/* Table Footer */}
-              <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-400">
+              <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-400 flex-wrap gap-2">
                 <span>{filteredUsers.length} users shown</span>
-                <span>{proCount} PRO / {freeCount} Free</span>
+                <span>
+                  {proCount} PRO ({salesMetrics.totalVerifiedSales} verified sales) / {freeCount} Free
+                </span>
               </div>
             </div>
+
+            {/* Safe Entitlement Origin Classification Modal */}
+            {editingOriginUser && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+                  <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Receipt className="w-5 h-5 text-[#00DDB3]" />
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base">
+                        Classify Entitlement Origin
+                      </h3>
+                    </div>
+                    <button
+                      onClick={() => setEditingOriginUser(null)}
+                      className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div className="p-3 bg-gray-50 dark:bg-gray-800/60 rounded-xl text-xs space-y-1">
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        User: {editingOriginUser.displayName || "User"} ({editingOriginUser.email})
+                      </p>
+                      <p className="text-gray-500 dark:text-gray-400 font-mono text-[10px]">
+                        UID: {editingOriginUser.uid}
+                      </p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/40 text-[11px] text-blue-800 dark:text-blue-300">
+                      <strong>Safe classification mechanism:</strong> This classifies revenue and growth reporting origin. It does <strong>NOT</strong> revoke, downgrade, or alter the user&apos;s active PRO feature access.
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Select Entitlement Origin:
+                      </label>
+                      <div className="space-y-2">
+                        {(
+                          [
+                            {
+                              type: "historical_manual_sale",
+                              label: "Historical Manual Sale",
+                              badge: "Paid Sale",
+                              desc: "Verified customer payment fulfilled via manual coupon code or invoice.",
+                            },
+                            {
+                              type: "automated_sale",
+                              label: "Automated Sale",
+                              badge: "Paid Sale",
+                              desc: "Customer checkout processed automatically via Lemon Squeezy.",
+                            },
+                            {
+                              type: "complimentary_grant",
+                              label: "Complimentary / Promo Grant",
+                              badge: "Non-Revenue",
+                              desc: "Promotional giveaway, courtesy, or partner lifetime access grant.",
+                            },
+                            {
+                              type: "internal_test",
+                              label: "Internal / Test Account",
+                              badge: "Internal",
+                              desc: "Founder, developer, or automated testing account.",
+                            },
+                            {
+                              type: "unknown",
+                              label: "Unknown Origin",
+                              badge: "Unverified",
+                              desc: "Historical entitlement awaiting independent verification.",
+                            },
+                          ] as const
+                        ).map((opt) => (
+                          <label
+                            key={opt.type}
+                            className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                              selectedOrigin === opt.type
+                                ? "border-[#00DDB3] bg-[#00DDB3]/5 dark:bg-[#00DDB3]/10"
+                                : "border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/40"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="originType"
+                              value={opt.type}
+                              checked={selectedOrigin === opt.type}
+                              onChange={() => setSelectedOrigin(opt.type)}
+                              className="mt-0.5 accent-[#00DDB3]"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-bold text-gray-900 dark:text-white">
+                                  {opt.label}
+                                </span>
+                                <span
+                                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                                    opt.badge === "Paid Sale"
+                                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                      : opt.badge === "Internal"
+                                      ? "bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
+                                      : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                                  }`}
+                                >
+                                  {opt.badge}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                {opt.desc}
+                              </p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                        Notes / Verification Source:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Paid customer, coupon PRO-5695B9C1"
+                        value={originNotes}
+                        onChange={(e) => setOriginNotes(e.target.value)}
+                        className="w-full px-3 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00DDB3]/40"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <button
+                      onClick={() => setEditingOriginUser(null)}
+                      disabled={savingOrigin}
+                      className="px-4 py-2 text-xs font-semibold text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveOrigin}
+                      disabled={savingOrigin}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-xl shadow-xs transition-colors disabled:opacity-50"
+                    >
+                      {savingOrigin ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Check className="w-3.5 h-3.5" />
+                          Save Classification
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

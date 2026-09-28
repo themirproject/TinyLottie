@@ -1,45 +1,23 @@
 "use client";
-import { useState, useEffect } from "react";
-import { zipSync, strToU8 } from 'fflate';
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { LottieDropZone } from "@/components/LottieDropZone";
-import { LottiePreview } from "@/components/LottiePreview";
-import { OptimizationPanel } from "@/components/OptimizationPanel";
 import { FeatureCard } from "@/components/FeatureCard";
 import { PricingModal } from "@/components/PricingModal";
 import { ContactModal } from "@/components/ContactModal";
-import { HeroVisual } from "@/components/HeroVisual";
-import { OptimizationLoader } from "@/components/OptimizationLoader";
-import { OptimizationError } from "@/components/OptimizationError";
-import { ThemeProvider } from "@/components/ThemeProvider";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FAQ } from "@/components/FAQ";
 import { BlogSection } from "@/components/BlogSection";
 import { LiveResults } from "@/components/LiveResults";
 import { SEOGuides } from "@/components/SEOGuides";
-import { Toaster } from "@/components/ui/sonner";
-import {
-  trackFileLoaded,
-  trackPaywallHit,
-  trackPaywallUpgradeClick,
-  trackPaywallDismissed,
-  trackOptimizationComplete,
-  trackOptimizationError,
-  trackDownload,
-} from "@/lib/analytics";
-import { toast } from "sonner";
+import { HowItWorks } from "@/components/HowItWorks";
+import { OptimizationProof } from "@/components/OptimizationProof";
+import { LottieOptimizerWorkspace } from "@/components/LottieOptimizerWorkspace";
+import { useLottieOptimizer, formatFileSize } from "@/lib/hooks/useLottieOptimizer";
+import { trackPaywallUpgradeClick } from "@/lib/analytics";
 import { motion } from "motion/react";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Zap,
   Shield,
@@ -47,50 +25,37 @@ import {
   FileJson,
   Download,
   Layers,
-  Loader2,
-  Heart,
-  Lightbulb,
   Check,
   X,
-  AlertCircle,
+  Lock,
+  Sparkles,
 } from "lucide-react";
-import tipsData from "../../tips.json";
-
-interface LottieData {
-  file: File;
-  data: any;
-  optimizedData: any | null;
-}
 
 function AppContent() {
   const { user, isPro, openAuthModal } = useAuth();
-  const [lottieData, setLottieData] =
-    useState<LottieData | null>(null);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [optimizationError, setOptimizationError] =
-    useState(false);
-  const [outputFormat, setOutputFormat] = useState<
-    "json" | "lottie"
-  >("json");
-  const [showPricingModal, setShowPricingModal] =
-    useState(false);
-  const [showContactModal, setShowContactModal] =
-    useState(false);
-  const [largeFileSize, setLargeFileSize] = useState(0);
-  const [rejectedFileNotice, setRejectedFileNotice] = useState<{
-    fileName: string;
-    fileSize: number;
-  } | null>(null);
-  const [currentTip, setCurrentTip] = useState("");
+  const [showContactModal, setShowContactModal] = useState(false);
 
-  const FILE_SIZE_LIMIT = 3 * 1024 * 1024; // 3MB in bytes
-  const PRO_FILE_SIZE_LIMIT = 50 * 1024 * 1024; // 50MB in bytes
+  const {
+    lottieData,
+    isOptimizing,
+    optimizationError,
+    outputFormat,
+    setOutputFormat,
+    showPricingModal,
+    setShowPricingModal,
+    largeFileSize,
+    rejectedFileNotice,
+    setRejectedFileNotice,
+    currentTip,
+    handleFileSelect,
+    handleOptimize,
+    handleRetryOptimization,
+    handleDownload,
+    handleReset,
+  } = useLottieOptimizer();
 
-  // Set dynamic favicon
+  // Dynamic SVG Favicon
   useEffect(() => {
-
-    // Create SVG favicon with FileJson icon using a 40x40 viewBox 
-    // to simulate p-2 (8px padding) and rounded-lg (8px border radius)
     const svg = `
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40">
         <rect width="40" height="40" rx="8" fill="#00DDB3" />
@@ -107,9 +72,7 @@ function AppContent() {
     const blob = new Blob([svg], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
 
-    let link = document.querySelector(
-      'link[rel="icon"]',
-    ) as HTMLLinkElement;
+    let link = document.querySelector('link[rel="icon"]') as HTMLLinkElement;
     if (!link) {
       link = document.createElement("link");
       link.rel = "icon";
@@ -120,355 +83,48 @@ function AppContent() {
     return () => URL.revokeObjectURL(url);
   }, []);
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return (
-      Math.round((bytes / Math.pow(k, i)) * 100) / 100 +
-      " " +
-      sizes[i]
-    );
-  };
-
-  const handleFileSelect = async (file: File) => {
-    // Check file size limits
-    if (isPro && file.size > PRO_FILE_SIZE_LIMIT) {
-      toast.error(`File size (${formatFileSize(file.size)}) exceeds the 50 MB Pro limit.`);
-      return;
-    }
-
-    // Check free limit and trigger paywall for non-PRO users
-    if (file.size > FILE_SIZE_LIMIT && !isPro) {
-      setLargeFileSize(file.size);
-      setRejectedFileNotice({
-        fileName: file.name,
-        fileSize: file.size,
-      });
-      setShowPricingModal(true);
-      toast.error(
-        `File size exceeds 3 MB Free limit. Upgrade to Pro to process files up to 50 MB.`,
-      );
-      // 🔥 Track paywall hit
-      trackPaywallHit({
-        fileSizeKb: file.size / 1024,
-        fileSizeMb: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
-      });
-      return;
-    }
-
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-      setRejectedFileNotice(null);
-      setLargeFileSize(0);
-      setLottieData({
-        file,
-        data,
-        optimizedData: null,
-      });
-      toast.success("Lottie file loaded successfully!");
-      // 🔥 Track successful file load
-      trackFileLoaded({
-        fileSizeKb: file.size / 1024,
-        fileExtension: file.name.endsWith('.lottie') ? 'lottie' : 'json',
-      });
-    } catch (error) {
-      toast.error(
-        "Failed to parse Lottie file. Please ensure it's a valid JSON.",
-      );
-    }
-  };
-
-  const optimizeLottie = (data: any): any => {
-    // Create a deep copy
-    const optimized = JSON.parse(JSON.stringify(data));
-
-    // Remove unnecessary properties
-    const removeUnusedProps = (obj: any): any => {
-      if (Array.isArray(obj)) {
-        return obj.map(removeUnusedProps);
-      } else if (obj && typeof obj === "object") {
-        const cleaned: any = {};
-        for (const key in obj) {
-          // Exclude metadata properties completely
-          if (!["nm", "mn", "cl"].includes(key)) {
-            // Keep "hd" only if it is true (default is false)
-            if (key === "hd" && obj[key] !== true) {
-              continue;
-            }
-            cleaned[key] = removeUnusedProps(obj[key]);
-          }
-        }
-        return cleaned;
-      }
-      return obj;
-    };
-
-    // Round numbers to reduce precision
-    const roundNumbers = (
-      obj: any,
-      precision: number = 3,
-    ): any => {
-      if (Array.isArray(obj)) {
-        return obj.map((item) => roundNumbers(item, precision));
-      } else if (obj && typeof obj === "object") {
-        const result: any = {};
-        for (const key in obj) {
-          result[key] = roundNumbers(obj[key], precision);
-        }
-        return result;
-      } else if (typeof obj === "number") {
-        return (
-          Math.round(obj * Math.pow(10, precision)) /
-          Math.pow(10, precision)
-        );
-      }
-      return obj;
-    };
-
-    let result = removeUnusedProps(optimized);
-    result = roundNumbers(result);
-
-    return result;
-  };
-
-  // Browser-based image to WebP converter
-  const convertImageToWebpClient = (dataUrl: string): Promise<{ dataUrl: string; width: number; height: number }> => {
-    return new Promise((resolve, reject) => {
-      const img = new window.Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return reject(new Error('Canvas ctx not found'));
-        ctx.drawImage(img, 0, 0);
-        // Optimize to WebP with 0.8 quality
-        const webpDataUrl = canvas.toDataURL('image/webp', 0.8);
-        resolve({ dataUrl: webpDataUrl, width: img.width, height: img.height });
-      };
-      img.onerror = () => reject(new Error('Image load failed'));
-      img.src = dataUrl;
-    });
-  };
-
-  const handleOptimize = async () => {
-    if (!lottieData) return;
-
-    setIsOptimizing(true);
-    setOptimizationError(false); // Reset error state
-    try {
-      // 1. Client side JSON cleanup
-      const cleanedData = optimizeLottie(lottieData.data);
-
-      // 2. Pure Client-Side Image Compression (zero uploads!)
-      // This specifically avoids Vercel's 4.5MB Serverless Payload limit
-      const assets = cleanedData.assets || [];
-      const supportedFormats = ['png', 'jpeg', 'jpg', 'gif'];
-
-      for (const asset of assets) {
-        if (!asset.p) continue;
-        if (typeof asset.p === 'string' && asset.p.startsWith('data:image')) {
-          const match = asset.p.match(/^data:image\/(png|jpeg|jpg|gif);base64,/);
-          if (match && supportedFormats.includes(match[1])) {
-            try {
-              const { dataUrl, width, height } = await convertImageToWebpClient(asset.p);
-              // Only replace if the WebP base64 is actually smaller than the original base64
-              if (dataUrl.length < asset.p.length) {
-                asset.p = dataUrl;
-                // Preserve structural metadata in the asset if it doesn't magically exist
-                if (!asset.w) asset.w = width;
-                if (!asset.h) asset.h = height;
-              }
-            } catch (err) {
-              console.warn("Failed to convert image to webp in browser:", err);
-            }
-          }
-        }
-      }
-
-      // Check if optimized size is larger than original size
-      const originalBytes = lottieData.file.size;
-      const optimizedBytes = new Blob([JSON.stringify(cleanedData)]).size;
-      
-      let finalData = cleanedData;
-      let finalOptimizedBytes = optimizedBytes;
-      let isAlreadyOptimized = false;
-
-      if (optimizedBytes > originalBytes) {
-        finalData = lottieData.data; // Fallback to original data
-        finalOptimizedBytes = originalBytes;
-        isAlreadyOptimized = true;
-      }
-
-      setLottieData({
-        ...lottieData,
-        optimizedData: finalData,
-      });
-
-      // Randomly pick a tip
-      const randomTip = tipsData[Math.floor(Math.random() * tipsData.length)].text;
-      setCurrentTip(randomTip);
-
-      // Log optimization to database if user is logged in (privacy-first: no raw file names stored)
-      if (user) {
-        try {
-          const ratio = Math.round(((originalBytes - finalOptimizedBytes) / originalBytes) * 100);
-          const detectedFormat = outputFormat || (lottieData.file.name.toLowerCase().endsWith(".lottie") ? "lottie" : "json");
-
-          await addDoc(collection(db, "usage_logs"), {
-            userId: user.uid,
-            format: detectedFormat,
-            originalSize: formatFileSize(originalBytes),
-            optimizedSize: formatFileSize(finalOptimizedBytes),
-            originalSizeBytes: originalBytes,
-            optimizedSizeBytes: finalOptimizedBytes,
-            compressionRatio: ratio,
-            status: "success",
-            timestamp: serverTimestamp()
-          });
-        } catch (logError) {
-          console.error("Failed to log usage:", logError);
-        }
-      }
-
-      // 🔥 Track optimization result
-      const compressionPct = Math.round(((originalBytes - finalOptimizedBytes) / originalBytes) * 100);
-      trackOptimizationComplete({
-        originalSizeKb: originalBytes / 1024,
-        optimizedSizeKb: finalOptimizedBytes / 1024,
-        compressionRatioPct: compressionPct,
-        isAlreadyOptimized,
-        userTier: !user ? 'anonymous' : isPro ? 'pro' : 'free',
-      });
-
-      if (isAlreadyOptimized) {
-        toast.info("Your file is already highly optimized. Original file was preserved.");
-      } else {
-        toast.success("Lottie optimized successfully offline!");
-      }
-    } catch (error) {
-      console.error(error);
-      setOptimizationError(true);
-      trackOptimizationError();
-      toast.error("Failed to optimize Lottie file.");
-    } finally {
-      setIsOptimizing(false);
-    }
-  };
-
-  const handleRetryOptimization = () => {
-    setOptimizationError(false);
-    handleOptimize();
-  };
-
-  const handleDownload = () => {
-    if (!lottieData?.optimizedData) return;
-
-    if (outputFormat === 'lottie') {
-      const manifest = {
-        generator: "TinyLottie",
-        version: "1.0",
-        revision: 1,
-        author: "TinyLottie",
-        animations: [{ id: "animation", speed: 1, themeColor: "", loop: true }],
-        custom: {}
-      };
-
-      const zipData = {
-        'manifest.json': strToU8(JSON.stringify(manifest)),
-        animations: {
-          'animation.json': strToU8(JSON.stringify(lottieData.optimizedData))
-        }
-      };
-
-      const zippedBytes = zipSync(zipData);
-      const blob = new Blob([zippedBytes.buffer as ArrayBuffer], { type: 'application/zip' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `optimized-${lottieData.file.name.replace('.json', '')}.lottie`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } else {
-      const dataStr = JSON.stringify(lottieData.optimizedData, null, 0);
-      const blob = new Blob([dataStr], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `optimized-${lottieData.file.name}`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
-
-    // 🔥 Track download with format and compression stats
-    if (lottieData?.optimizedData) {
-      const originalBytes = lottieData.file.size;
-      const optimizedBytes = new Blob([JSON.stringify(lottieData.optimizedData)]).size;
-      const ratio = Math.round(((originalBytes - optimizedBytes) / originalBytes) * 100);
-      trackDownload({
-        format: outputFormat === 'lottie' ? 'lottie' : 'json',
-        optimizedSizeKb: optimizedBytes / 1024,
-        compressionRatioPct: ratio,
-      });
-    }
-    toast.success("Download started!");
-  };
-
-  const handleReset = () => {
-    setLottieData(null);
-    setRejectedFileNotice(null);
-    setLargeFileSize(0);
-  };
-
+  // Verified & Implemented Features
   const features = [
     {
+      icon: FileJson,
+      title: "Lottie JSON AST Optimization",
+      description:
+        "Strips unnecessary editor metadata (`nm`, `mn`, `cl`), prunes hidden guide layers, and rounds float coordinates to 3 decimals without visual loss.",
+    },
+    {
       icon: Layers,
-      title: "Universal Format Compatibility",
+      title: "dotLottie (.lottie) Support",
       description:
-        "Seamlessly works with Lottie JSON and dotLottie files. Switch between formats effortlessly while preserving your animation's integrity.",
-    },
-    {
-      icon: Zap,
-      title: "Smart Compression Engine",
-      description:
-        "Intelligent algorithm analyzes and compresses your animations by removing redundant data, achieving up to 98% size reduction without visual loss.",
-    },
-    {
-      icon: Gauge,
-      title: "Blazing Fast Processing",
-      description:
-        "Lightning-speed optimization powered by modern browser technology. Process multiple files in seconds, not minutes.",
+        "Convert bulky JSON files into compact, deflated dotLottie binary archives for 30–50% smaller bundle size and faster network transfer.",
     },
     {
       icon: Shield,
-      title: "Zero-Upload Security",
+      title: "100% In-Browser Privacy",
       description:
-        "Your animations never touch our servers. Everything processes locally in your browser, guaranteeing absolute privacy and data security.",
+        "Your animations never touch an external server or cloud backend. Processing runs entirely in local browser memory with zero data retention.",
     },
     {
-      icon: FileJson,
-      title: "Precision Optimization",
+      icon: Zap,
+      title: "WebP Asset Transcoding",
       description:
-        "Advanced techniques including decimal rounding and metadata stripping ensure maximum file size reduction while maintaining perfect playback.",
+        "Automatically identifies embedded base64 PNG and JPEG bitmaps inside your animation and transcodes them to modern WebP via HTML5 canvas.",
     },
     {
       icon: Download,
-      title: "Instant Download",
+      title: "Instant Offline Download",
       description:
-        "Get your optimized files immediately with one click. No waiting, no queues, no sign-ups required.",
+        "Download your compressed animation directly from memory with one click. No waiting queues, no processing timeouts, no sign-up required.",
+    },
+    {
+      icon: Gauge,
+      title: "Core Web Vitals Boost",
+      description:
+        "Reduces main-thread JavaScript JSON parsing overhead and network payload, improving Largest Contentful Paint (LCP) and Interaction to Next Paint (INP).",
     },
   ];
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 relative">
-
       {/* Background Gradient Glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00DDB3]/10 dark:bg-[#00DDB3]/5 rounded-full blur-3xl" />
@@ -495,6 +151,12 @@ function AppContent() {
 
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-6">
+              <Link
+                href="/lottie-compressor"
+                className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-[#00DDB3] transition-colors"
+              >
+                Lottie Compressor
+              </Link>
               <Link
                 href="/#features"
                 className="text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-[#00DDB3] transition-colors"
@@ -531,21 +193,29 @@ function AppContent() {
                   href="/profile"
                   className="flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-900 dark:text-white rounded-lg font-medium transition-all"
                 >
-                  <img src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`} alt="Avatar" className="w-6 h-6 rounded-full" />
+                  <img
+                    src={user.photoURL || `https://ui-avatars.com/api/?name=${user.email}`}
+                    alt="Avatar"
+                    className="w-6 h-6 rounded-full"
+                  />
                   <span className="hidden sm:inline">Profile</span>
-                  {isPro && <span className="text-[10px] font-bold bg-[#00DDB3] text-white px-1.5 py-0.5 rounded ml-1">PRO</span>}
+                  {isPro && (
+                    <span className="text-[10px] font-bold bg-[#00DDB3] text-white px-1.5 py-0.5 rounded ml-1">
+                      PRO
+                    </span>
+                  )}
                 </Link>
               ) : (
                 <div className="flex items-center gap-1 sm:gap-2">
                   <button
                     onClick={() => openAuthModal("signin")}
-                    className="px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="px-2.5 py-1.5 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors cursor-pointer"
                   >
                     Log in
                   </button>
                   <button
                     onClick={() => openAuthModal("signup")}
-                    className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium text-xs sm:text-sm transition-all shadow-xs"
+                    className="flex items-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-gray-900 hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-100 text-white dark:text-gray-900 rounded-lg font-medium text-xs sm:text-sm transition-all shadow-xs cursor-pointer"
                   >
                     Get Started
                   </button>
@@ -557,82 +227,78 @@ function AppContent() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20 relative">
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 relative">
         {!lottieData ? (
-          // Hero Section
+          // Hero & Landing Page Section
           <div className="max-w-6xl mx-auto">
+            {/* Hero Header */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-6 sm:mb-8 mt-4 sm:mt-6 lg:mt-0"
+              className="text-center mb-6 sm:mb-8"
             >
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-5 lg:mb-4 mt-2 sm:mt-3 lg:mt-0 leading-tight px-4">
-                <span className="text-gray-900 dark:text-white">
-                  Make Your{" "}
-                </span>
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 leading-tight tracking-tight text-gray-900 dark:text-white">
+                Compress Lottie files.{" "}
                 <span className="bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] bg-clip-text text-transparent">
-                  Lotties
-                </span>
-                <br />
-                <span className="bg-gradient-to-r from-[#00DDB3] via-[#00C9A7] to-[#00DDB3] bg-clip-text text-transparent animate-gradient">
-                  Lighter Than Air
+                  Keep the motion.
                 </span>
               </h1>
-              <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed px-4">
-                Free browser-based <span className="font-semibold text-gray-900 dark:text-white">Lottie compressor</span> and dotLottie optimizer. Reduce animation JSON file size{" "}
-                <span className="font-semibold text-[#00DDB3]">
-                  up to 98%
-                </span>{" "}
-                instantly with zero uploads and 100% offline privacy.
+              <p className="text-base sm:text-lg lg:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed">
+                Optimize Lottie JSON and dotLottie files directly in your browser. Reduce file size without uploading your animations to a server.
               </p>
+
+              {/* Subtle Trust Indicators */}
+              <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-5 text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                <span className="inline-flex items-center gap-1.5">
+                  <Shield className="w-4 h-4 text-[#00DDB3]" />
+                  Browser-based processing
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Lock className="w-4 h-4 text-[#00DDB3]" />
+                  No file uploads to servers
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Layers className="w-4 h-4 text-[#00DDB3]" />
+                  JSON & dotLottie support
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-[#00DDB3]" />
+                  Free to start (up to 3 MB)
+                </span>
+              </div>
             </motion.div>
 
-            {/* Limit Exceeded Notice if modal was dismissed or oversized file was selected */}
-            {rejectedFileNotice && !lottieData && (
+            {/* Limit Exceeded Notice if oversized file was dropped */}
+            {rejectedFileNotice && (
               <motion.div
-                initial={{ opacity: 0, y: -12, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="relative mb-8 overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent dark:from-amber-950/40 dark:via-gray-900/90 dark:to-gray-900/70 p-4 sm:p-5 shadow-lg shadow-amber-500/5 backdrop-blur-md"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative mb-6 overflow-hidden rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-amber-950/30 p-4 sm:p-5 shadow-xs"
               >
-                {/* Subtle decorative glow */}
-                <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-500/10 blur-2xl" />
-                <div className="pointer-events-none absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-[#00DDB3]/10 blur-2xl" />
-
-                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-start gap-3.5">
-                    <div className="relative shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/25 mt-0.5 sm:mt-0">
-                      <Zap className="w-5 h-5 fill-white/20" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-xl bg-amber-500 text-white shrink-0">
+                      <Zap className="w-5 h-5" />
                     </div>
-
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
-                          Limit Exceeded
-                        </span>
-                        <h4 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
-                          File not optimized — Free limit exceeded
-                        </h4>
-                      </div>
-                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl">
-                        Your <span className="font-semibold text-gray-900 dark:text-white">{formatFileSize(rejectedFileNotice.fileSize)}</span> file exceeds the <span className="font-semibold text-gray-900 dark:text-white">3 MB Free limit</span>. Choose a smaller file or upgrade to PRO (up to 50 MB).
+                    <div>
+                      <h4 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
+                        File exceeds 3 MB Free limit ({formatFileSize(rejectedFileNotice.fileSize)})
+                      </h4>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-0.5">
+                        Upgrade to Lifetime PRO to process animations up to 50 MB with no limits.
                       </p>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end shrink-0 pl-14 sm:pl-0">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setShowPricingModal(true)}
-                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#00DDB3] hover:bg-[#00C9A7] text-white text-xs font-bold transition-all transform hover:scale-[1.02] shadow-md shadow-[#00DDB3]/20 cursor-pointer"
+                      className="px-4 py-2 bg-[#00DDB3] hover:bg-[#00C9A7] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
                     >
-                      View PRO features
-                      <span aria-hidden="true">→</span>
+                      View Lifetime PRO — $99
                     </button>
                     <button
                       onClick={() => setRejectedFileNotice(null)}
-                      className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
-                      aria-label="Dismiss notice"
+                      className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -641,36 +307,43 @@ function AppContent() {
               </motion.div>
             )}
 
-            {/* Drag & Drop - Primary CTA */}
+            {/* Primary Action: Dropzone prominently above the fold on desktop */}
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="mb-10 sm:mb-12 lg:mb-16"
+              className="mb-12 sm:mb-16"
             >
               <LottieDropZone onFileSelect={handleFileSelect} />
             </motion.div>
 
-            {/* Features Section - Now Visible Above Fold */}
+            {/* Phase 4: How It Works */}
+            <HowItWorks />
+
+            {/* Phase 3: Real Optimization Proof */}
+            <OptimizationProof />
+
+            {/* Phase 5: Audited Features Section */}
             <motion.div
               id="features"
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mb-10 sm:mb-12 lg:mb-16 scroll-mt-20"
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="mb-12 sm:mb-16 scroll-mt-20 pt-8"
             >
-              <div className="text-center mb-8 sm:mb-10 lg:mb-12 px-4">
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                  Everything You Need, Nothing You Don't
+              <div className="text-center mb-8 sm:mb-12 px-4 max-w-2xl mx-auto">
+                <span className="text-xs font-bold text-[#00DDB3] uppercase tracking-wider block mb-2">
+                  Engine Architecture
+                </span>
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                  Designed for Production Performance
                 </h3>
-                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                  Powerful optimization tools designed for
-                  developers, designers, and teams who value
-                  performance and privacy.
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
+                  Transparent optimization benefits built directly on open web standards. No server intermediaries.
                 </p>
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {features.map((feature, index) => (
                   <FeatureCard
                     key={index}
@@ -683,48 +356,48 @@ function AppContent() {
               </div>
             </motion.div>
 
-            {/* Stats */}
+            {/* Stats Overview */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 sm:p-8 mb-10 sm:mb-12 lg:mb-16"
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4 bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 sm:p-8 mb-12 sm:mb-16 border border-gray-200 dark:border-gray-800"
             >
               <div className="text-center py-2">
-                <div className="text-3xl sm:text-4xl font-bold text-[#00DDB3] mb-1 sm:mb-2">
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
                   98%
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   Max Compression
                 </div>
               </div>
               <div className="text-center py-2">
-                <div className="text-3xl sm:text-4xl font-bold text-[#00DDB3] mb-1 sm:mb-2">
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
                   100%
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Privacy
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  In-Browser Privacy
                 </div>
               </div>
               <div className="text-center py-2">
-                <div className="text-3xl sm:text-4xl font-bold text-[#00DDB3] mb-1 sm:mb-2">
-                  0ms
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
+                  0 ms
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Server Upload
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  Server Upload Time
                 </div>
               </div>
               <div className="text-center py-2">
-                <div className="text-3xl sm:text-4xl font-bold text-[#00DDB3] mb-1 sm:mb-2">
+                <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
                   Free
                 </div>
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                  Forever
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
+                  To Start (3 MB)
                 </div>
               </div>
             </motion.div>
 
-            {/* Live Results Section */}
+            {/* Live Results Stream */}
             <div id="results" className="scroll-mt-20">
               <LiveResults />
             </div>
@@ -741,110 +414,94 @@ function AppContent() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
-              className="mt-6 mb-10 sm:mb-12 lg:mb-16 max-w-5xl mx-auto scroll-mt-20"
+              className="mt-8 mb-12 sm:mb-16 max-w-5xl mx-auto scroll-mt-20"
             >
-              <div className="text-center mb-8 sm:mb-10 lg:mb-12 px-4">
-                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4">
+              <div className="text-center mb-8 sm:mb-10 px-4">
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2 tracking-tight">
                   Simple, Transparent Pricing
                 </h3>
-                <p className="text-base sm:text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-                  Pay once, use forever. No hidden fees, no subscriptions.
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-xl mx-auto">
+                  Start free with generous limits or unlock lifetime access for large animation files.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto px-4">
+              <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
                 {/* Free Plan */}
-                <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-3xl p-8 flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 flex flex-col justify-between">
                   <div>
-                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Free Plan</h4>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Perfect for casual optimization and small projects.</p>
-                    
-                    <div className="flex items-baseline gap-2 mb-6">
-                      <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$0</span>
-                      <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">/ forever</span>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">Free Tier</h4>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      Perfect for standard web & app animations
+                    </p>
+                    <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-6">
+                      $0{" "}
+                      <span className="text-xs text-gray-400 font-normal">forever</span>
                     </div>
 
-                    <div className="space-y-4 mb-8">
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">File limit up to 3 MB</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">100% offline local processing</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">Lottie & dotLottie optimization</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">WebP image compression</span>
-                      </div>
-                      <div className="flex items-center gap-3 opacity-50">
-                        <X className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-500 line-through">Unlimited file sizes</span>
-                      </div>
-                      <div className="flex items-center gap-3 opacity-50">
-                        <X className="w-5 h-5 text-gray-400" />
-                        <span className="text-sm text-gray-500 line-through">Priority email support</span>
-                      </div>
-                    </div>
+                    <ul className="space-y-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span>Up to 3 MB file size</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span>JSON & dotLottie export</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span>100% in-browser offline processing</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span>Unlimited optimizations</span>
+                      </li>
+                    </ul>
                   </div>
 
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 border-gray-200 dark:border-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold"
-                    onClick={handleReset}
+                  <button
+                    onClick={() => {
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="w-full mt-8 py-3 rounded-xl border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-200 text-xs sm:text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
                   >
-                    Start Optimizing
-                  </Button>
+                    Start Optimizing Free
+                  </button>
                 </div>
 
-                {/* PRO Plan */}
-                <div className="bg-white dark:bg-gray-900 border-2 border-[#00DDB3] rounded-3xl p-8 flex flex-col justify-between shadow-xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 bg-gradient-to-r from-[#00DDB3] to-[#00C9A7] text-white text-[10px] font-bold tracking-wider uppercase py-1 px-4 rounded-bl-xl">
-                    Popular
-                  </div>
+                {/* Lifetime PRO Plan */}
+                <div className="bg-white dark:bg-gray-900 rounded-2xl border-2 border-[#00DDB3] p-6 sm:p-8 flex flex-col justify-between relative shadow-lg shadow-[#00DDB3]/5">
+                  <span className="absolute -top-3 right-6 px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-[#00DDB3] text-white">
+                    Lifetime Deal
+                  </span>
 
                   <div>
-                    <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Lifetime PRO</h4>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">For designers, developers, and power users.</p>
-                    
-                    <div className="flex items-baseline gap-2 mb-6">
-                      <span className="text-4xl font-extrabold text-gray-900 dark:text-white">$99</span>
-                      <span className="text-gray-500 dark:text-gray-400 text-sm font-medium">/ lifetime</span>
-                      <span className="ml-2 text-[10px] font-bold text-[#00DDB3] bg-[#00DDB3]/10 px-2 py-0.5 rounded-full border border-[#00DDB3]/20">
-                        ONE-TIME
-                      </span>
+                    <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-1">PRO Lifetime</h4>
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-4">
+                      For animation studios, power users and large rigs
+                    </p>
+                    <div className="text-3xl font-extrabold text-gray-900 dark:text-white mb-6">
+                      $99{" "}
+                      <span className="text-xs text-gray-400 font-normal">one-time payment</span>
                     </div>
 
-                    <div className="space-y-4 mb-8">
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-900 dark:text-gray-200 font-medium">Unlimited file sizes (no limits)</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">100% offline local processing</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">WebP image compression</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">Priority email support</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Check className="w-5 h-5 text-[#00DDB3]" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">Early access to Figma plugin & API</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Heart className="w-5 h-5 text-red-500 fill-red-500" />
-                        <span className="text-sm text-gray-600 dark:text-gray-300">Support active development</span>
-                      </div>
-                    </div>
+                    <ul className="space-y-3 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span><strong>Up to 50 MB</strong> file size limit</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span>High-res embedded asset WebP conversion</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span>Priority support & feature access</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <Check className="w-4 h-4 text-[#00DDB3]" />
+                        <span>No recurring subscription fees</span>
+                      </li>
+                    </ul>
                   </div>
 
                   <a
@@ -852,9 +509,9 @@ function AppContent() {
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => trackPaywallUpgradeClick("pricing_section")}
-                    className="flex items-center justify-center w-full h-12 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-lg font-bold transition-all transform hover:scale-[1.02]"
+                    className="flex items-center justify-center w-full mt-8 py-3 bg-[#00DDB3] hover:bg-[#00C9A7] text-white rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-[#00DDB3]/20 transition-all transform hover:scale-[1.01] cursor-pointer"
                   >
-                    Upgrade to Pro
+                    Get Lifetime PRO — $99
                   </a>
                 </div>
               </div>
@@ -869,318 +526,68 @@ function AppContent() {
             </div>
           </div>
         ) : (
-          // Optimization View
-          <div className="max-w-6xl mx-auto">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-              <motion.h2
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white"
-              >
-                {lottieData.optimizedData
-                  ? "Optimization Complete"
-                  : "Ready to Optimize"}
-              </motion.h2>
-              <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={handleReset}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
-              >
-                ← Start Over
-              </motion.button>
-            </div>
-
-            <div className="space-y-6 sm:space-y-8">
-              {/* Preview Section - Side by Side */}
-              <div className="grid lg:grid-cols-2 gap-6 sm:gap-8">
-                {/* Left Container - Original Animation + Controls */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 flex flex-col"
-                >
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                    Original Animation
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 sm:p-4 aspect-square flex items-center justify-center mb-4 sm:mb-6">
-                    <LottiePreview
-                      animationData={lottieData.data}
-                    />
-                  </div>
-
-                  {/* File Info & Controls */}
-                  <div className="space-y-3 sm:space-y-4 mt-auto">
-                    <div className="flex items-start gap-2 sm:gap-3 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700">
-                      <div className="p-1.5 sm:p-2 bg-[#00DDB3]/10 rounded-lg">
-                        <FileJson className="w-4 h-4 sm:w-5 sm:h-5 text-[#00DDB3]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">
-                          {lottieData.file.name}
-                        </h4>
-                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
-                          {formatFileSize(lottieData.file.size)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Output Format
-                      </label>
-                      <Select
-                        value={outputFormat}
-                        onValueChange={(val) => setOutputFormat(val as "json" | "lottie")}
-                        disabled={isOptimizing || !lottieData.optimizedData}
-                      >
-                        <SelectTrigger className="w-full bg-gray-50 dark:bg-gray-900 border-gray-300 dark:border-gray-600 h-10 sm:h-11">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="json">
-                            Lottie JSON
-                          </SelectItem>
-                          <SelectItem value="lottie">
-                            dotLottie
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Button
-                      onClick={handleOptimize}
-                      disabled={isOptimizing}
-                      className={`w-full h-11 sm:h-12 text-sm sm:text-base font-semibold ${lottieData.optimizedData
-                          ? "bg-transparent border-2 border-[#00DDB3] text-[#00DDB3] hover:bg-[#00DDB3]/10"
-                          : "bg-[#00DDB3] hover:bg-[#00C9A7] text-white"
-                        }`}
-                    >
-                      {isOptimizing ? (
-                        <>
-                          <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
-                          Optimizing...
-                        </>
-                      ) : (
-                        <>
-                          <FileJson className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                          {lottieData.optimizedData
-                            ? "Re-optimize"
-                            : "Optimize"}
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </motion.div>
-
-                {/* Right Container - Optimized Animation + Download */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-4 sm:p-6 flex flex-col"
-                >
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">
-                    Optimized Animation
-                  </h3>
-                  <div className="bg-gray-50 dark:bg-gray-900 rounded-xl p-3 sm:p-4 aspect-square flex items-center justify-center mb-4 sm:mb-6">
-                    {isOptimizing ? (
-                      // Loading State - Show Loader
-                      <OptimizationLoader />
-                    ) : optimizationError ? (
-                      // Error State - Show Error
-                      <OptimizationError
-                        onRetry={handleRetryOptimization}
-                      />
-                    ) : lottieData.optimizedData ? (
-                      // Success State - Show Optimized Animation
-                      <LottiePreview
-                        animationData={lottieData.optimizedData}
-                      />
-                    ) : (
-                      // Initial State - Waiting for optimization
-                      <div className="text-center text-gray-400 dark:text-gray-600">
-                        <FileJson className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-3 opacity-30" />
-                        <p className="text-xs sm:text-sm px-4">
-                          Optimized version will appear here
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Download Section */}
-                  {lottieData.optimizedData ? (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="space-y-3 sm:space-y-4 mt-auto"
-                    >
-                      {/* File Size Comparison */}
-                      <div className="pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between mb-2 sm:mb-3">
-                          <div>
-                            <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
-                              Original
-                            </p>
-                            <p className="text-gray-600 dark:text-gray-400 text-[11px] sm:text-[12px]">
-                              {formatFileSize(
-                                lottieData.file.size,
-                              )}
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">
-                              Optimized
-                            </p>
-                            <p className="text-[11px] sm:text-xs text-[#00DDB3]">
-                              {formatFileSize(
-                                new Blob([
-                                  JSON.stringify(
-                                    lottieData.optimizedData,
-                                  ),
-                                ]).size,
-                              )}
-                            </p>
-                          </div>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div className="relative h-2 sm:h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden w-full mt-2">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{
-                              width: `var(--progress)`,
-                            }}
-                            transition={{
-                              duration: 0.8,
-                              ease: "easeOut",
-                            }}
-                            className="absolute left-0 top-0 h-full bg-[#00DDB3] rounded-full"
-                            style={{ "--progress": `${Math.round(((lottieData.file.size - new Blob([JSON.stringify(lottieData.optimizedData)]).size) / lottieData.file.size) * 100)}%` } as React.CSSProperties}
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between mt-1.5 sm:mt-2">
-                          <p className="text-gray-500 text-[12px] sm:text-[14px]">
-                            Saved{" "}
-                            {formatFileSize(
-                              lottieData.file.size -
-                              new Blob([
-                                JSON.stringify(
-                                  lottieData.optimizedData,
-                                ),
-                              ]).size,
-                            )}
-                          </p>
-                          <p className="font-bold text-[#00DDB3] text-[12px] sm:text-[14px]">
-                            {Math.round(
-                              ((lottieData.file.size -
-                                new Blob([
-                                  JSON.stringify(
-                                    lottieData.optimizedData,
-                                  ),
-                                ]).size) /
-                                lottieData.file.size) *
-                              100,
-                            )}
-                            % smaller
-                          </p>
-                        </div>
-                      </div>
-
-                      <Button
-                        onClick={handleDownload}
-                        className="w-full bg-[#00DDB3] hover:bg-[#00C9A7] text-white h-11 sm:h-12 text-sm sm:text-base font-semibold"
-                      >
-                        <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-                        Download Optimized File
-                      </Button>
-                    </motion.div>
-                  ) : (
-                    <div className="mt-auto">
-                      <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-900 rounded-lg text-center">
-                        <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-500">
-                          Click "Optimize" to compress your file
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              </div>
-
-              {/* Developer Tip Card - Independent */}
-              {currentTip && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-2xl p-4 sm:p-6"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-500/20 rounded-xl text-yellow-600 dark:text-yellow-400">
-                      <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-base sm:text-lg font-semibold text-yellow-800 dark:text-yellow-400 mb-1.5">
-                        💡 Developer Tip
-                      </h4>
-                      <p className="text-sm sm:text-base text-yellow-700 dark:text-yellow-200/80 mb-3 leading-relaxed">
-                        {currentTip}
-                      </p>
-                      <button 
-                        onClick={() => setShowPricingModal(true)}
-                        className="text-sm font-semibold text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 transition-colors"
-                      >
-                        Learn More →
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          </div>
+          // Active Workspace when a file is loaded
+          <LottieOptimizerWorkspace
+            lottieData={lottieData}
+            isOptimizing={isOptimizing}
+            optimizationError={optimizationError}
+            outputFormat={outputFormat}
+            currentTip={currentTip}
+            onFormatChange={setOutputFormat}
+            onOptimize={handleOptimize}
+            onRetry={handleRetryOptimization}
+            onDownload={handleDownload}
+            onReset={handleReset}
+          />
         )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-800 mt-8 sm:mt-10 lg:mt-12 py-8 sm:py-10 lg:py-12 bg-gray-50 dark:bg-gray-900">
+      <footer className="border-t border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 py-8 sm:py-12 mt-12 sm:mt-16">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-2 mb-3 sm:mb-4">
-              <div className="p-1.5 sm:p-2 bg-[#00DDB3] rounded-lg">
-                <FileJson className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="max-w-6xl mx-auto text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="p-1.5 bg-[#00DDB3] rounded-md">
+                <FileJson className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
                 TinyLottie
               </span>
             </div>
-            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-3 sm:mb-4 px-4">
-              All processing happens locally in your browser.
-              Your files never leave your device.
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-3 px-4">
+              All processing happens locally in your browser. Your files never leave your device.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-4 mb-3 sm:mb-4">
+            <div className="flex flex-wrap items-center justify-center gap-4 mb-3 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+              <Link
+                href="/lottie-compressor"
+                className="hover:text-[#00DDB3] transition-colors"
+              >
+                Free Lottie Compressor
+              </Link>
+              <span className="text-gray-300 dark:text-gray-700">·</span>
               <button
                 type="button"
                 onClick={() => setShowContactModal(true)}
-                className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 hover:text-[#00DDB3] transition-colors cursor-pointer"
+                className="hover:text-[#00DDB3] transition-colors cursor-pointer"
               >
                 Support
               </button>
               <span className="text-gray-300 dark:text-gray-700">·</span>
               <Link
                 href="/privacy"
-                className="text-xs sm:text-sm text-gray-500 dark:text-gray-500 hover:text-[#00DDB3] transition-colors"
+                className="hover:text-[#00DDB3] transition-colors"
               >
                 Privacy Policy
               </Link>
             </div>
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-500">
-              © 2026 TinyLottie. Built with ❤️ for the
-              animation community.
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              © 2026 TinyLottie. Free offline Lottie JSON & dotLottie compressor.
             </p>
           </div>
         </div>
       </footer>
 
-      {/* Pricing Modal */}
+      {/* Existing Preserved Paywall Modal */}
       <PricingModal
         isOpen={showPricingModal}
         onClose={() => setShowPricingModal(false)}

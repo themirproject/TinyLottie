@@ -67,29 +67,41 @@ The card was labeled "GA4 Event Tracking" with a green "Live" badge, leading vie
 
 ---
 
-## 3. PRO Membership Origin Investigation (9 PRO Accounts)
+## 3. PRO Membership Origin Investigation & Historical Sales Correction
 
-The database was audited to determine whether the 9 PRO accounts originated from verified payments, manual admin grants, promotional codes, or legacy migrations.
+The database and business records were audited to establish the true entitlement origin for all 9 active PRO accounts.
 
-### Detailed Account Audit
+### Business Context Correction: Historical Manually Fulfilled Sales
+Prior to the implementation of the automated Lemon Squeezy checkout system, TinyLottie completed **5 real commercial sales**. In that early operating phase, paying customers completed payment directly (via invoicing/PayPal/transfer) and access was manually fulfilled via one-time coupon codes. 
 
-| # | User Email | UID | PRO Source | Date Activated | Origin Classification |
+Therefore, having 0 historical Lemon Squeezy automated orders does **NOT** indicate zero historical sales.
+
+### Detailed Account Audit & Entitlement Classification
+
+| # | User Email | UID | Fulfillment Method | Date Activated | Entitlement Origin Classification |
 | :- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `emir.kalayci@gmail.com` | `Py3GTwTWhLbY1bVHmVLtoqjYDdP2` | Coupon `PRO-0001` | 2026-04-19 | **Internal / Founder** |
-| 2 | `kalayci.emir@gmail.com` | `HYgHmkE0OqOqrAZD2q6N2KZEA7m1` | Coupon `PRO-2340D0FE` | 2026-06-05 | **Internal / Founder** |
-| 3 | `michaelwalden1980@gmail.com` | `iYpYv1TO8IPbn79Zw22l9sRF9rQ2` | Coupon `PRO-5695B9C1` | 2026-06-05 | **Promotional Grant** |
-| 4 | `roy.cockram@stashcook.com` | `7psOwiqs7TfYmhKsEBLYOGGq7OG3` | Coupon `PRO-6BF3EB70` | 2026-06-15 | **Promotional Grant** |
-| 5 | `timguomail@gmail.com` | `XMQnz9t4V1N67BgGHliFs3WxKWX2` | Coupon `PRO-85A5B3B2` | 2026-07-02 | **Promotional Grant** |
-| 6 | `allenhi@126.com` | `xhicYWLdzcgWw21palOY3fESsjw1` | Coupon `PRO-98AAAAB8` | 2026-08-27 | **Promotional Grant** |
-| 7 | `isissi525@gmail.com` | `OLInWfeItBgCp0LfHT5R4SanMOI3` | Coupon `PRO-0E80F9FA` | 2026-09-18 | **Promotional Grant** |
-| 8 | `griw222@gmail.com` | `2x7ud7tTlOa1FZFNHB07Fw0N1mx2` | Admin Manual Grant | 2026-09-18 | **Manual Admin Grant** |
-| 9 | `michael@epicstudios.ai` | `wI5VCcUCU1SvgUmmCOSy3mjVHVt1` | Admin Manual Grant | 2026-09-18 | **Manual Admin Grant** |
+| 1 | `michaelwalden1980@gmail.com` | `iYpYv1TO8IPbn79Zw22l9sRF9rQ2` | Coupon `PRO-5695B9C1` | 2026-06-05 | **Historical Manual Sale** (Verified Paid Customer) |
+| 2 | `roy.cockram@stashcook.com` | `7psOwiqs7TfYmhKsEBLYOGGq7OG3` | Coupon `PRO-6BF3EB70` | 2026-06-15 | **Historical Manual Sale** (Verified Paid Customer) |
+| 3 | `timguomail@gmail.com` | `XMQnz9t4V1N67BgGHliFs3WxKWX2` | Coupon `PRO-85A5B3B2` | 2026-07-02 | **Historical Manual Sale** (Verified Paid Customer) |
+| 4 | `allenhi@126.com` | `xhicYWLdzcgWw21palOY3fESsjw1` | Coupon `PRO-98AAAAB8` | 2026-08-27 | **Historical Manual Sale** (Verified Paid Customer) |
+| 5 | `isissi525@gmail.com` | `OLInWfeItBgCp0LfHT5R4SanMOI3` | Coupon `PRO-0E80F9FA` | 2026-09-18 | **Historical Manual Sale** (Verified Paid Customer) |
+| 6 | `emir.kalayci@gmail.com` | `Py3GTwTWhLbY1bVHmVLtoqjYDdP2` | Coupon `PRO-0001` | 2026-04-19 | **Internal / Test** (Founder Account) |
+| 7 | `kalayci.emir@gmail.com` | `HYgHmkE0OqOqrAZD2q6N2KZEA7m1` | Coupon `PRO-2340D0FE` | 2026-06-05 | **Internal / Test** (Founder Account) |
+| 8 | `griw222@gmail.com` | `2x7ud7tTlOa1FZFNHB07Fw0N1mx2` | Admin Direct Grant | 2026-09-18 | **Unknown / Unverified** (Pending proof of payment vs courtesy) |
+| 9 | `michael@epicstudios.ai` | `wI5VCcUCU1SvgUmmCOSy3mjVHVt1` | Admin Direct Grant | 2026-09-18 | **Unknown / Unverified** (Pending proof of payment vs courtesy) |
 
 ### Orders & Webhook Status
-- `lemon_orders` collection contains **1 document**: `test_order_live_001` for `dinamenucom@gmail.com` (Total: $19.00, Status: paid, Date: 2026-09-18). This was a developer sandbox webhook verification test.
-- `pending_pro` collection: **0 documents**.
-- **Conclusion:** **0 of the 9 active PRO accounts are organic paid external customers.** 7 originated from promotional campaign coupon codes (2 of which belong to the founder), and 2 were directly granted PRO via the Admin Dashboard.
-- **Action Taken:** In accordance with sprint guidelines, no entitlements were modified or revoked.
+- **Lemon Squeezy Orders (`lemon_orders` collection):** Contains **1 document** (`test_order_live_001` for `dinamenucom@gmail.com`, Total: $19.00, Date: 2026-09-18). This was a developer sandbox webhook verification test. Automated sales count: **0**.
+- **Historical Commercial Sales:** **5 verified manual customer sales**.
+- **Total Verified Sales:** **5** (5 manual + 0 automated).
+- **Complimentary / Promotional Grants:** **0**.
+- **Internal / Test Accounts:** **2** (Founder accounts).
+- **Unverified Entitlements:** **2** (Held as `unknown` origin until explicitly verified).
+
+### Strict Entitlement Integrity Policy
+- **No Entitlement Revocation:** Existing user PRO status (`isPro: true`) is strictly preserved across all 9 accounts.
+- **No Auto-Inference:** Coupon redemption alone does **not** classify an account as promotional or paid.
+- **Safe Admin Mechanism:** Administrators can classify entitlement origins (`historical_manual_sale`, `automated_sale`, `complimentary_grant`, `internal_test`, `unknown`) with verification notes in the Admin Dashboard without altering feature access.
 
 ---
 
