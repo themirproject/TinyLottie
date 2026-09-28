@@ -590,35 +590,51 @@ function AppContent() {
             {/* Limit Exceeded Notice if modal was dismissed or oversized file was selected */}
             {rejectedFileNotice && !lottieData && (
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6 p-4 sm:p-5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 flex items-start gap-3.5 text-amber-900 dark:text-amber-200 shadow-sm"
+                initial={{ opacity: 0, y: -12, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="relative mb-8 overflow-hidden rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent dark:from-amber-950/40 dark:via-gray-900/90 dark:to-gray-900/70 p-4 sm:p-5 shadow-lg shadow-amber-500/5 backdrop-blur-md"
               >
-                <div className="p-2 bg-amber-100 dark:bg-amber-900/50 rounded-xl shrink-0">
-                  <AlertCircle className="w-5 h-5 text-amber-700 dark:text-amber-400" />
-                </div>
-                <div className="flex-1 text-sm">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="font-bold text-amber-900 dark:text-amber-200">
-                      File not optimized — Free limit exceeded
-                    </h4>
+                {/* Subtle decorative glow */}
+                <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-amber-500/10 blur-2xl" />
+                <div className="pointer-events-none absolute -left-10 -bottom-10 h-32 w-32 rounded-full bg-[#00DDB3]/10 blur-2xl" />
+
+                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-start gap-3.5">
+                    <div className="relative shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white shadow-md shadow-amber-500/25 mt-0.5 sm:mt-0">
+                      <Zap className="w-5 h-5 fill-white/20" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                          Limit Exceeded
+                        </span>
+                        <h4 className="font-bold text-gray-900 dark:text-white text-sm sm:text-base">
+                          File not optimized — Free limit exceeded
+                        </h4>
+                      </div>
+                      <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed max-w-2xl">
+                        Your <span className="font-semibold text-gray-900 dark:text-white">{formatFileSize(rejectedFileNotice.fileSize)}</span> file exceeds the <span className="font-semibold text-gray-900 dark:text-white">3 MB Free limit</span>. Choose a smaller file or upgrade to PRO (up to 50 MB).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end shrink-0 pl-14 sm:pl-0">
+                    <button
+                      onClick={() => setShowPricingModal(true)}
+                      className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-[#00DDB3] hover:bg-[#00C9A7] text-white text-xs font-bold transition-all transform hover:scale-[1.02] shadow-md shadow-[#00DDB3]/20 cursor-pointer"
+                    >
+                      View PRO features
+                      <span aria-hidden="true">→</span>
+                    </button>
                     <button
                       onClick={() => setRejectedFileNotice(null)}
-                      className="text-amber-500 hover:text-amber-800 dark:hover:text-amber-200 p-1 rounded-lg transition-colors"
+                      className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-colors cursor-pointer"
                       aria-label="Dismiss notice"
                     >
                       <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <p className="mt-1 text-xs sm:text-sm text-amber-800/90 dark:text-amber-300/80 leading-relaxed">
-                    Your {formatFileSize(rejectedFileNotice.fileSize)} file exceeds the 3 MB Free limit. Choose a smaller file or upgrade to PRO (up to 50 MB).
-                  </p>
-                  <div className="mt-3 flex items-center gap-3">
-                    <button
-                      onClick={() => setShowPricingModal(true)}
-                      className="text-xs font-bold text-amber-900 dark:text-amber-100 underline underline-offset-2 hover:opacity-80 transition-opacity"
-                    >
-                      View PRO features →
                     </button>
                   </div>
                 </div>
