@@ -505,9 +505,10 @@ export function GrowthInsightsView({
 
           <button
             onClick={() => setShowExportModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-[#00DDB3]/15 to-emerald-500/15 hover:from-[#00DDB3]/25 hover:to-emerald-500/25 text-emerald-800 dark:text-[#00DDB3] border border-[#00DDB3]/30 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#00DDB3] hover:bg-[#00c5a0] text-gray-900 font-bold text-xs rounded-xl shadow-xs hover:shadow-md transition-all cursor-pointer active:scale-[0.98]"
+            title="Export AI-Ready Brief (.md / Copy to Clipboard)"
           >
-            <Sparkles className="w-3.5 h-3.5 text-[#00DDB3]" />
+            <Sparkles className="w-3.5 h-3.5 text-gray-900" />
             <span>Export AI Brief</span>
           </button>
         </div>
