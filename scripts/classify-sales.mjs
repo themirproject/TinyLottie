@@ -67,26 +67,25 @@ if (!getApps().length) {
 
 const db = getFirestore();
 
-// 5 verified historical sales fulfilled via manual coupon
+// 7 verified historical sales confirmed by founder
 const HISTORICAL_SALES_UIDS = [
   { uid: "iYpYv1TO8IPbn79Zw22l9sRF9rQ2", email: "michaelwalden1980@gmail.com", coupon: "PRO-5695B9C1" },
   { uid: "7psOwiqs7TfYmhKsEBLYOGGq7OG3", email: "roy.cockram@stashcook.com", coupon: "PRO-6BF3EB70" },
   { uid: "XMQnz9t4V1N67BgGHliFs3WxKWX2", email: "timguomail@gmail.com", coupon: "PRO-85A5B3B2" },
   { uid: "xhicYWLdzcgWw21palOY3fESsjw1", email: "allenhi@126.com", coupon: "PRO-98AAAAB8" },
   { uid: "OLInWfeItBgCp0LfHT5R4SanMOI3", email: "isissi525@gmail.com", coupon: "PRO-0E80F9FA" },
+  { uid: "2x7ud7tTlOa1FZFNHB07Fw0N1mx2", email: "griw222@gmail.com", coupon: "Verified customer manual grant" },
+  { uid: "wI5VCcUCU1SvgUmmCOSy3mjVHVt1", email: "michael@epicstudios.ai", coupon: "Verified customer manual grant" },
 ];
 
-// Internal founder / test accounts
+// Internal founder accounts (2 out of 9 total PRO users)
 const INTERNAL_TEST_UIDS = [
   { uid: "Py3GTwTWhLbY1bVHmVLtoqjYDdP2", email: "emir.kalayci@gmail.com" },
   { uid: "HYgHmkE0OqOqrAZD2q6N2KZEA7m1", email: "kalayci.emir@gmail.com" },
 ];
 
-// Unverified manual admin grants (not counted as sales unless independently verified)
-const UNVERIFIED_UIDS = [
-  { uid: "2x7ud7tTlOa1FZFNHB07Fw0N1mx2", email: "griw222@gmail.com" },
-  { uid: "wI5VCcUCU1SvgUmmCOSy3mjVHVt1", email: "michael@epicstudios.ai" },
-];
+// Unverified manual admin grants
+const UNVERIFIED_UIDS = [];
 
 async function main() {
   console.log("=== Classifying TinyLottie Historical Sales & Entitlements ===");

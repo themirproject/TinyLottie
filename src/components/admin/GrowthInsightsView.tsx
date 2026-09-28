@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { ExportReportModal } from "@/components/admin/ExportReportModal";
 import {
   TrendingUp,
   TrendingDown,
@@ -129,6 +130,8 @@ export function GrowthInsightsView({
   shareCounts,
   loading = false,
 }: GrowthInsightsViewProps) {
+  const [showExportModal, setShowExportModal] = useState(false);
+
   // ─── 1. Determine Consistent Reporting Periods (UTC) ────────────────────
   const periods = useMemo(() => {
     const now = new Date();
@@ -489,14 +492,24 @@ export function GrowthInsightsView({
           </p>
         </div>
 
-        <div className="flex flex-col sm:items-end text-xs">
-          <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 font-medium">
-            <Clock className="w-3.5 h-3.5 text-[#00DDB3]" />
-            <span>Current: {periods.currentLabel}</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-col sm:items-end text-xs">
+            <div className="flex items-center gap-1.5 text-gray-700 dark:text-gray-300 font-medium">
+              <Clock className="w-3.5 h-3.5 text-[#00DDB3]" />
+              <span>Current: {periods.currentLabel}</span>
+            </div>
+            <span className="text-[11px] text-gray-400 mt-0.5">
+              Prior: {periods.priorLabel}
+            </span>
           </div>
-          <span className="text-[11px] text-gray-400 mt-0.5">
-            Prior: {periods.priorLabel}
-          </span>
+
+          <button
+            onClick={() => setShowExportModal(true)}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-[#00DDB3]/15 to-emerald-500/15 hover:from-[#00DDB3]/25 hover:to-emerald-500/25 text-emerald-800 dark:text-[#00DDB3] border border-[#00DDB3]/30 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs active:scale-[0.98]"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-[#00DDB3]" />
+            <span>Export AI Brief</span>
+          </button>
         </div>
       </div>
 
@@ -954,6 +967,19 @@ export function GrowthInsightsView({
           </div>
         </div>
       </div>
+
+      {/* ─── Export AI-Ready Brief Modal ──────────────────────────────────── */}
+      <ExportReportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        periods={periods}
+        metrics={metrics}
+        salesMetrics={salesMetrics}
+        shareCounts={shareCounts}
+        totalUsersCount={adminUsers.length}
+        totalProCount={adminUsers.filter((u) => u.isPro).length}
+        insights={actionableInsights}
+      />
     </div>
   );
 }
