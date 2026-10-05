@@ -64,18 +64,22 @@ export function OptimizationProof() {
   const [activeCase, setActiveCase] = useState<BenchmarkCase>(BENCHMARKS[0]);
 
   return (
-    <section className="py-12 sm:py-16 border-t border-gray-100 dark:border-gray-900">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+    <section className="py-14 sm:py-20 my-12 rounded-3xl bg-gray-950 text-white border border-gray-800 shadow-2xl relative overflow-hidden">
+      {/* Subtle ambient teal glow in dark section */}
+      <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00DDB3]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#00C9A7]/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#00DDB3]/10 text-[#00DDB3] mb-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#00DDB3]/15 text-[#00DDB3] border border-[#00DDB3]/30 mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Measured Compression Results</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight">
             Real Optimization Proof
           </h2>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-sm sm:text-base text-gray-400 mt-2">
             See how much weight TinyLottie sheds from typical After Effects and Figma animations without altering motion or visual quality.
           </p>
         </div>
@@ -88,8 +92,8 @@ export function OptimizationProof() {
               onClick={() => setActiveCase(item)}
               className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 activeCase.id === item.id
-                  ? "bg-[#00DDB3] text-white shadow-sm"
-                  : "bg-gray-100 dark:bg-gray-800/80 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "bg-[#00DDB3] text-gray-950 font-bold shadow-md shadow-[#00DDB3]/20"
+                  : "bg-gray-900 text-gray-300 hover:bg-gray-800 hover:text-white border border-gray-800"
               }`}
             >
               {item.name}
@@ -98,28 +102,28 @@ export function OptimizationProof() {
         </div>
 
         {/* Comparison Card */}
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 sm:p-8 shadow-sm">
+        <div className="bg-gray-900/90 rounded-2xl border border-gray-800 p-6 sm:p-8 shadow-xl backdrop-blur-sm">
           <div className="grid md:grid-cols-12 gap-6 items-center">
             {/* Left: Original File */}
-            <div className="md:col-span-5 p-5 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-200/80 dark:border-gray-700/60 text-center">
+            <div className="md:col-span-5 p-5 rounded-xl bg-gray-950 border border-gray-800 text-center">
               <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">
                 ORIGINAL FILE
               </span>
-              <p className="text-3xl sm:text-4xl font-extrabold text-gray-800 dark:text-gray-200">
+              <p className="text-3xl sm:text-4xl font-extrabold text-gray-200">
                 {(activeCase.originalSizeKb / 1024).toFixed(2)} MB
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-gray-400 mt-1">
                 {activeCase.originalSizeKb} KB raw payload
               </p>
-              <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700/60 flex items-center justify-center gap-1.5 text-xs text-gray-500">
-                <FileJson className="w-4 h-4 text-gray-400" />
+              <div className="mt-4 pt-3 border-t border-gray-800 flex items-center justify-center gap-1.5 text-xs text-gray-400">
+                <FileJson className="w-4 h-4 text-gray-500" />
                 <span>Heavy export with redundant metadata</span>
               </div>
             </div>
 
             {/* Middle: Arrow & Reduction % */}
             <div className="md:col-span-2 flex flex-col items-center justify-center py-2">
-              <div className="w-10 h-10 rounded-full bg-[#00DDB3]/15 text-[#00DDB3] flex items-center justify-center mb-2">
+              <div className="w-10 h-10 rounded-full bg-[#00DDB3]/15 text-[#00DDB3] border border-[#00DDB3]/30 flex items-center justify-center mb-2">
                 <ArrowRight className="w-5 h-5 hidden md:block" />
                 <span className="text-xs font-bold md:hidden">↓</span>
               </div>
@@ -132,8 +136,8 @@ export function OptimizationProof() {
             </div>
 
             {/* Right: Optimized File */}
-            <div className="md:col-span-5 p-5 rounded-xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-[#00DDB3]/30 text-center relative overflow-hidden">
-              <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider block mb-2">
+            <div className="md:col-span-5 p-5 rounded-xl bg-[#00DDB3]/10 border border-[#00DDB3]/40 text-center relative overflow-hidden">
+              <span className="text-[11px] font-bold text-[#00DDB3] uppercase tracking-wider block mb-2">
                 OPTIMIZED FILE
               </span>
               <p className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3]">
@@ -141,10 +145,10 @@ export function OptimizationProof() {
                   ? `${(activeCase.optimizedSizeKb / 1024).toFixed(2)} MB`
                   : `${activeCase.optimizedSizeKb} KB`}
               </p>
-              <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80 mt-1">
+              <p className="text-xs text-emerald-400 mt-1">
                 {(activeCase.optimizedSizeKb / 1024).toFixed(2)} MB lightweight payload
               </p>
-              <div className="mt-4 pt-3 border-t border-emerald-500/20 flex items-center justify-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
+              <div className="mt-4 pt-3 border-t border-[#00DDB3]/20 flex items-center justify-center gap-1.5 text-xs text-[#00DDB3]">
                 <CheckCircle2 className="w-4 h-4 text-[#00DDB3]" />
                 <span>Fast web & mobile playback</span>
               </div>
@@ -152,19 +156,19 @@ export function OptimizationProof() {
           </div>
 
           {/* Under-the-hood breakdown */}
-          <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-800">
+          <div className="mt-6 pt-6 border-t border-gray-800">
             <div className="grid sm:grid-cols-3 gap-3">
               {activeCase.techniques.map((tech, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-2 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 text-xs text-gray-700 dark:text-gray-300"
+                  className="flex items-start gap-2 p-3 rounded-xl bg-gray-950 border border-gray-800/80 text-xs text-gray-300"
                 >
                   <CheckCircle2 className="w-4 h-4 text-[#00DDB3] shrink-0 mt-0.5" />
                   <span>{tech}</span>
                 </div>
               ))}
             </div>
-            <p className="text-[11px] text-gray-400 dark:text-gray-500 text-center mt-4">
+            <p className="text-[11px] text-gray-500 text-center mt-4">
               * {activeCase.note}
             </p>
           </div>
