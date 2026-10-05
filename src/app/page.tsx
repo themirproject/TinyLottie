@@ -18,7 +18,6 @@ import { LottieOptimizerWorkspace } from "@/components/LottieOptimizerWorkspace"
 import { useLottieOptimizer, formatFileSize } from "@/lib/hooks/useLottieOptimizer";
 import { trackPaywallUpgradeClick } from "@/lib/analytics";
 import { motion } from "motion/react";
-import { HeroCompressionAnimation } from "@/components/motion/HeroCompressionAnimation";
 import { SubtleBackgroundMotion } from "@/components/motion/SubtleBackgroundMotion";
 import {
   Zap,
@@ -271,16 +270,6 @@ function AppContent() {
                   Free to start (up to 3 MB)
                 </span>
               </div>
-            </motion.div>
-
-            {/* Hero Interactive Compression Flow Animation */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="mb-8"
-            >
-              <HeroCompressionAnimation />
             </motion.div>
 
             {/* Limit Exceeded Notice if oversized file was dropped */}
