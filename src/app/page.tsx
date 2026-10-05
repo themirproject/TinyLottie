@@ -18,6 +18,8 @@ import { LottieOptimizerWorkspace } from "@/components/LottieOptimizerWorkspace"
 import { useLottieOptimizer, formatFileSize } from "@/lib/hooks/useLottieOptimizer";
 import { trackPaywallUpgradeClick } from "@/lib/analytics";
 import { motion } from "motion/react";
+import { HeroCompressionAnimation } from "@/components/motion/HeroCompressionAnimation";
+import { SubtleBackgroundMotion } from "@/components/motion/SubtleBackgroundMotion";
 import {
   Zap,
   Shield,
@@ -87,36 +89,42 @@ function AppContent() {
   const features = [
     {
       icon: FileJson,
+      variant: "ast" as const,
       title: "Lottie JSON AST Optimization",
       description:
         "Strips unnecessary editor metadata (`nm`, `mn`, `cl`), prunes hidden guide layers, and rounds float coordinates to 3 decimals without visual loss.",
     },
     {
       icon: Layers,
+      variant: "dotlottie" as const,
       title: "dotLottie (.lottie) Support",
       description:
         "Convert bulky JSON files into compact, deflated dotLottie binary archives for 30–50% smaller bundle size and faster network transfer.",
     },
     {
       icon: Shield,
+      variant: "privacy" as const,
       title: "100% In-Browser Privacy",
       description:
         "Your animations never touch an external server or cloud backend. Processing runs entirely in local browser memory with zero data retention.",
     },
     {
       icon: Zap,
+      variant: "webp" as const,
       title: "WebP Asset Transcoding",
       description:
         "Automatically identifies embedded base64 PNG and JPEG bitmaps inside your animation and transcodes them to modern WebP via HTML5 canvas.",
     },
     {
       icon: Download,
+      variant: "download" as const,
       title: "Instant Offline Download",
       description:
         "Download your compressed animation directly from memory with one click. No waiting queues, no processing timeouts, no sign-up required.",
     },
     {
       icon: Gauge,
+      variant: "vitals" as const,
       title: "Core Web Vitals Boost",
       description:
         "Reduces main-thread JavaScript JSON parsing overhead and network payload, improving Largest Contentful Paint (LCP) and Interaction to Next Paint (INP).",
@@ -125,11 +133,8 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950 transition-colors duration-300 relative">
-      {/* Background Gradient Glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00DDB3]/10 dark:bg-[#00DDB3]/5 rounded-full blur-3xl" />
-        <div className="absolute top-20 right-1/4 w-80 h-80 bg-[#00C9A7]/10 dark:bg-[#00C9A7]/5 rounded-full blur-3xl" />
-      </div>
+      {/* Background Subtle Motion Glow & Tokens */}
+      <SubtleBackgroundMotion />
 
       {/* Header */}
       <header className="border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
@@ -268,6 +273,16 @@ function AppContent() {
               </div>
             </motion.div>
 
+            {/* Hero Interactive Compression Flow Animation */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="mb-8"
+            >
+              <HeroCompressionAnimation />
+            </motion.div>
+
             {/* Limit Exceeded Notice if oversized file was dropped */}
             {rejectedFileNotice && (
               <motion.div
@@ -311,7 +326,7 @@ function AppContent() {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              transition={{ delay: 0.15 }}
               className="mb-12 sm:mb-16"
             >
               <LottieDropZone onFileSelect={handleFileSelect} />
@@ -348,6 +363,7 @@ function AppContent() {
                   <FeatureCard
                     key={index}
                     icon={feature.icon}
+                    variant={feature.variant}
                     title={feature.title}
                     description={feature.description}
                     index={index}
