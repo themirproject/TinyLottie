@@ -366,13 +366,13 @@ function AppContent() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="grid grid-cols-2 lg:grid-cols-4 gap-4 bg-gray-950 text-white rounded-2xl p-6 sm:p-8 mb-12 sm:mb-16 border border-gray-800 shadow-xl"
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4 bg-gray-50 dark:bg-gray-900 rounded-2xl p-6 sm:p-8 mb-12 sm:mb-16 border border-gray-200 dark:border-gray-800"
             >
               <div className="text-center py-2">
                 <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
                   98%
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400 font-medium">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   Max Compression
                 </div>
               </div>
@@ -380,7 +380,7 @@ function AppContent() {
                 <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
                   100%
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400 font-medium">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   In-Browser Privacy
                 </div>
               </div>
@@ -388,7 +388,7 @@ function AppContent() {
                 <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
                   0 ms
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400 font-medium">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   Server Upload Time
                 </div>
               </div>
@@ -396,7 +396,7 @@ function AppContent() {
                 <div className="text-3xl sm:text-4xl font-extrabold text-[#00DDB3] mb-1">
                   Free
                 </div>
-                <div className="text-xs sm:text-sm text-gray-400 font-medium">
+                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 font-medium">
                   To Start (3 MB)
                 </div>
               </div>
