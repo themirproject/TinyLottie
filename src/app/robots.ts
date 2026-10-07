@@ -4,10 +4,10 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
-        // All standard web crawlers — allow everything except API routes
+        // All standard web crawlers — allow public pages, disallow private/internal routes
         userAgent: '*',
-        allow: ['/', '/llms.txt'],
-        disallow: ['/api/', '/_next/'],
+        allow: ['/', '/llms.txt', '/lottie-compressor', '/privacy'],
+        disallow: ['/api/', '/_next/', '/admin/', '/profile/'],
       },
       // --- LLM / AI crawlers — explicitly allowed for discoverability ---
       { userAgent: 'GPTBot',          allow: '/' },
